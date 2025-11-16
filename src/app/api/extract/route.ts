@@ -31,7 +31,11 @@ export async function POST(req: Request) {
       }
 
       const data = await response.json();
-      return NextResponse.json({ text: data.text });
+      return NextResponse.json({
+        full_text: data.full_text,
+        blocks: data.blocks,
+        image_base64: data.image_base64,
+      });
     } catch (err) {
       return NextResponse.json(
         { error: `Failed to connect to backend: ${String(err)}` },
