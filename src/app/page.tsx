@@ -20,6 +20,8 @@ interface ImageScale {
   naturalHeight?: number;
 }
 
+type ViewMode = "upload" | "image" | "text";
+
 export default function Page() {
   const [result, setResult] = useState<ExtractionResult | null>(null);
   const [loading, setLoading] = useState(false);
@@ -28,6 +30,7 @@ export default function Page() {
     null
   );
   const [imageScale, setImageScale] = useState<ImageScale>({ width: 0, height: 0 });
+  const [viewMode, setViewMode] = useState<ViewMode>("upload");
 
   const dyslexiaStyles: React.CSSProperties = {
     fontFamily: 'Verdana, Arial, Helvetica, sans-serif',
@@ -39,7 +42,6 @@ export default function Page() {
     color: '#0f172a',
     padding: '1rem',
     borderRadius: 8,
-    maxWidth: '60ch',
     textAlign: 'left' as const,
     whiteSpace: 'pre-wrap' as const,
     overflowWrap: 'break-word' as const,
@@ -53,6 +55,7 @@ export default function Page() {
     setError(null);
     setResult(null);
     setSelectedBlockIndex(null);
+    setViewMode("upload");
 
     try {
       const form = new FormData();
@@ -71,6 +74,7 @@ export default function Page() {
       const data = await res.json();
       if (data.error) throw new Error(data.error);
       setResult(data);
+      setViewMode("image");
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       setError(msg);
@@ -82,7 +86,6 @@ export default function Page() {
   const handleImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
     const img = e.currentTarget;
     
-    // Get the actual displayed dimensions
     setImageScale({
       width: img.offsetWidth,
       height: img.offsetHeight,
@@ -100,20 +103,20 @@ export default function Page() {
           position: 'absolute',
           top: 0,
           left: 0,
-          width: '100%',
-          height: '100%',
+          width: imageScale.width,
+          height: imageScale.height,
           cursor: 'pointer',
         }}
+        width={imageScale.width}
+        height={imageScale.height}
       >
         {result.blocks.map((block, index) => {
           const vertices = block.vertices;
           if (vertices.length < 2) return null;
 
-          // Calculate the scale factor from original image coordinates to displayed image
           const scaleX = imageScale.width / (imageScale.naturalWidth || 1);
           const scaleY = imageScale.height / (imageScale.naturalHeight || 1);
 
-          // Create path from vertices
           const points = vertices
             .map((v) => `${v.x * scaleX},${v.y * scaleY}`)
             .join(' ');
@@ -127,7 +130,10 @@ export default function Page() {
                 fill={isSelected ? 'rgba(59, 130, 246, 0.4)' : 'rgba(59, 130, 246, 0.1)'}
                 stroke={isSelected ? '#3b82f6' : '#93c5fd'}
                 strokeWidth="2"
-                onClick={() => setSelectedBlockIndex(index)}
+                onClick={() => {
+                  setSelectedBlockIndex(index);
+                  setViewMode("text");
+                }}
                 style={{ transition: 'all 0.2s' }}
               />
             </g>
@@ -137,89 +143,183 @@ export default function Page() {
     );
   };
 
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-4xl flex-col items-center justify-start py-20 px-6 bg-white dark:bg-black sm:items-start">
-        <h1 className="text-2xl font-semibold mb-4 text-black dark:text-zinc-50" style={{ fontFamily: dyslexiaStyles.fontFamily }}>
-          Upload an image or PDF to extract text
-        </h1>
+  // Upload View
+  if (viewMode === "upload") {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-white dark:bg-black">
+        <main className="flex flex-col items-center justify-center gap-8 px-6">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-semibold mb-2 text-black dark:text-zinc-50">
+              Make text friendlier
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400">
+              Take a photo of some text to make it friendlier
+            </p>
+          </div>
 
-        <input
-          aria-label="Select image or PDF"
-          type="file"
-          accept="image/*,application/pdf"
-          onChange={handleFileChange}
-          className="mb-4"
-        />
+          <div className="grid grid-cols-2 gap-6 w-full max-w-md">
+            <label className="flex flex-col items-center justify-center p-8 border-2 border-blue-500 rounded-lg cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-950 transition-colors">
+              <div className="text-4xl mb-2">📷</div>
+              <span className="font-medium text-center text-blue-600 dark:text-blue-400">
+                Take a photo
+              </span>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                className="hidden"
+              />
+            </label>
 
-        {loading && <p className="text-sm">Extracting text…</p>}
-        {error && <p className="text-sm text-red-600">Error: {error}</p>}
+            <label className="flex flex-col items-center justify-center p-8 border-2 border-blue-500 rounded-lg cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-950 transition-colors">
+              <div className="text-4xl mb-2">📁</div>
+              <span className="font-medium text-center text-blue-600 dark:text-blue-400">
+                Upload from device
+              </span>
+              <input
+                type="file"
+                accept="image/*,application/pdf"
+                onChange={handleFileChange}
+                className="hidden"
+              />
+            </label>
+          </div>
 
-        {result && (
-          <section className="mt-6 w-full" aria-live="polite">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
-              {/* Image with Bounding Boxes */}
-              <div>
-                <h2
-                  className="mb-3 text-black dark:text-zinc-50"
-                  style={{
-                    ...dyslexiaStyles,
-                    fontSize: `calc(${dyslexiaStyles.fontSize} * 1.2)`,
-                    fontWeight: 700,
-                    margin: 0,
-                    padding: 0,
-                  }}
-                >
-                  Image with Text Boxes
-                </h2>
-                <div className="relative bg-gray-100 rounded-lg overflow-hidden">
-                  <img
-                    src={`data:image/jpeg;base64,${result.image_base64}`}
-                    alt="Uploaded document"
-                    onLoad={handleImageLoad}
-                    className="w-full h-auto block"
-                  />
-                  {renderBoundingBoxes()}
-                </div>
-                <p className="text-xs text-gray-500 mt-2">
-                  Click on a text box to see its content
-                </p>
-              </div>
+          <div className="grid grid-cols-2 gap-4 w-full max-w-md mt-4">
+            <button className="flex flex-col items-center justify-center p-6 border-2 border-gray-300 rounded-lg hover:border-blue-500 transition-colors text-gray-700 dark:text-gray-300">
+              <div className="text-2xl mb-2">📋</div>
+              <span className="text-xs text-center font-medium">
+                My previous files
+              </span>
+            </button>
 
-              {/* Selected Text Display */}
-              <div>
-                <h2
-                  className="mb-3 text-black dark:text-zinc-50"
-                  style={{
-                    ...dyslexiaStyles,
-                    fontSize: `calc(${dyslexiaStyles.fontSize} * 1.2)`,
-                    fontWeight: 700,
-                    margin: 0,
-                    padding: 0,
-                  }}
-                >
-                  {selectedBlockIndex !== null ? 'Selected Text' : 'Full Text'}
-                </h2>
+            <button className="flex flex-col items-center justify-center p-6 border-2 border-gray-300 rounded-lg hover:border-blue-500 transition-colors text-gray-700 dark:text-gray-300">
+              <div className="text-2xl mb-2">👥</div>
+              <span className="text-xs text-center font-medium">
+                Discover others&apos; files
+              </span>
+            </button>
+          </div>
 
-                <div style={dyslexiaStyles}>
-                  {selectedBlockIndex !== null
-                    ? result.blocks[selectedBlockIndex]?.text
-                    : result.full_text}
-                </div>
-
-                {selectedBlockIndex !== null && (
-                  <button
-                    onClick={() => setSelectedBlockIndex(null)}
-                    className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors text-sm"
-                  >
-                    Show Full Text
-                  </button>
-                )}
-              </div>
+          {loading && (
+            <div className="text-center">
+              <p className="text-gray-600 dark:text-gray-400">Extracting text…</p>
             </div>
-          </section>
-        )}
-      </main>
-    </div>
-  );
+          )}
+          {error && (
+            <div className="text-center bg-red-50 dark:bg-red-950 p-4 rounded-lg">
+              <p className="text-red-600 dark:text-red-400">Error: {error}</p>
+            </div>
+          )}
+        </main>
+      </div>
+    );
+  }
+
+  // Image View
+  if (viewMode === "image" && result) {
+    return (
+      <div className="flex flex-col h-screen w-screen bg-black">
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 bg-white dark:bg-gray-900">
+          <button
+            onClick={() => setViewMode("upload")}
+            className="flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:underline"
+          >
+            ← Back
+          </button>
+          <div className="flex gap-4">
+            <button className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
+              ⚙️
+            </button>
+            <button className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
+              👤
+            </button>
+          </div>
+        </div>
+
+        {/* Image Container */}
+        <div className="flex-1 flex items-center justify-center relative bg-black overflow-hidden">
+          <div className="relative w-full h-full flex items-center justify-center">
+            <div className="relative" style={{ width: 'fit-content', height: 'fit-content' }}>
+              <img
+                src={`data:image/jpeg;base64,${result.image_base64}`}
+                alt="Uploaded document"
+                onLoad={handleImageLoad}
+                className="max-w-full max-h-[calc(100vh-120px)] object-contain"
+              />
+              {renderBoundingBoxes()}
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="p-4 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800">
+          <p className="text-xs text-gray-600 dark:text-gray-400 text-center">
+            Click on a text box to view its content
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Text View
+  if (viewMode === "text" && result) {
+    const displayText = selectedBlockIndex !== null 
+      ? result.blocks[selectedBlockIndex]?.text 
+      : result.full_text;
+
+    return (
+      <div className="flex flex-col h-screen w-screen bg-white dark:bg-black">
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800">
+          <button
+            onClick={() => setViewMode("image")}
+            className="flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:underline"
+          >
+            ← Back
+          </button>
+          <div className="flex gap-4">
+            <button className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
+              ⚙️
+            </button>
+            <button className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
+              👤
+            </button>
+          </div>
+        </div>
+
+        {/* Text Content */}
+        <div className="flex-1 overflow-auto p-6 lg:p-12">
+          <div style={dyslexiaStyles} className="mx-auto max-w-3xl">
+            {displayText}
+          </div>
+        </div>
+
+        {/* Footer Actions */}
+        <div className="flex gap-4 p-4 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 flex-wrap justify-center">
+          <button className="px-6 py-2 flex items-center gap-2 text-blue-600 dark:text-blue-400 border border-blue-600 dark:border-blue-400 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950 transition-colors">
+            📄 Text-only mode
+          </button>
+          <button className="px-6 py-2 flex items-center gap-2 text-blue-600 dark:text-blue-400 border border-blue-600 dark:border-blue-400 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950 transition-colors">
+            👥 Share with others
+          </button>
+          <button className="px-6 py-2 flex items-center gap-2 text-blue-600 dark:text-blue-400 border border-blue-600 dark:border-blue-400 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950 transition-colors">
+            🔊 Listen
+          </button>
+          <button className="px-6 py-2 flex items-center gap-2 text-blue-600 dark:text-blue-400 border border-blue-600 dark:border-blue-400 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950 transition-colors">
+            🎤 Read
+          </button>
+          <button className="px-6 py-2 flex items-center gap-2 text-blue-600 dark:text-blue-400 border border-blue-600 dark:border-blue-400 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950 transition-colors">
+            ✏️ Edit
+          </button>
+          <button className="px-6 py-2 flex items-center gap-2 text-blue-600 dark:text-blue-400 border border-blue-600 dark:border-blue-400 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950 transition-colors">
+            📝 Notes
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return null;
 }
