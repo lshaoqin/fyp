@@ -1,8 +1,4 @@
 import { NextResponse } from "next/server";
-import fs from "fs";
-import path from "path";
-import os from "os";
-import { extractTextFromImage } from "../../../helpers/ocr";
 
 export const runtime = "nodejs";
 
@@ -14,25 +10,33 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-    const tmpDir = os.tmpdir();
-  const originalName = file.name ?? `upload`;
-  const filePath = path.join(tmpDir, `${Date.now()}-${originalName}`);
-
-    await fs.promises.writeFile(filePath, buffer);
+    // Forward the request to the Python backend
+    const backendUrl = process.env.PYTHON_BACKEND_URL || "http://localhost:5000";
+    
+    const formData = new FormData();
+    formData.append("file", file);
 
     try {
-      const text = await extractTextFromImage(filePath);
-      return NextResponse.json({ text });
-    } catch (err) {
-      return NextResponse.json({ error: String(err) }, { status: 500 });
-    } finally {
-      try {
-        await fs.promises.unlink(filePath);
-      } catch {
-        // ignore cleanup errors
+      const response = await fetch(`${backendUrl}/extract`, {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        return NextResponse.json(
+          { error: error.error || "Failed to extract text" },
+          { status: response.status }
+        );
       }
+
+      const data = await response.json();
+      return NextResponse.json({ text: data.text });
+    } catch (err) {
+      return NextResponse.json(
+        { error: `Failed to connect to backend: ${String(err)}` },
+        { status: 500 }
+      );
     }
   } catch (err) {
     return NextResponse.json({ error: String(err) }, { status: 500 });
