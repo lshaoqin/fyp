@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, ReactNode } from "react";
 import {
   CameraIcon,
   UploadIcon,
@@ -34,6 +34,33 @@ interface ImageScale {
 }
 
 type ViewMode = "upload" | "image" | "text";
+
+// Function to parse markdown formatting (**text** -> bold)
+function parseMarkdownText(text: string): ReactNode {
+  const parts: ReactNode[] = [];
+  const regex = /\*\*(.+?)\*\*/g;
+  let lastIndex = 0;
+  let match;
+
+  while ((match = regex.exec(text)) !== null) {
+    // Add text before the bold part
+    if (match.index > lastIndex) {
+      parts.push(text.substring(lastIndex, match.index));
+    }
+    // Add bold text
+    parts.push(
+      <strong key={`bold-${match.index}`}>{match[1]}</strong>
+    );
+    lastIndex = regex.lastIndex;
+  }
+
+  // Add remaining text
+  if (lastIndex < text.length) {
+    parts.push(text.substring(lastIndex));
+  }
+
+  return parts.length > 0 ? parts : text;
+}
 
 export default function Page() {
   const [result, setResult] = useState<ExtractionResult | null>(null);
@@ -215,9 +242,12 @@ export default function Page() {
           </div>
 
           {loading && (
-            <div className="text-center">
+            <div className="text-center flex flex-col items-center gap-6">
+              <div className="animate-spin">
+                <div className="w-16 h-16 border-4 border-blue-200 dark:border-blue-900 border-t-blue-600 dark:border-t-blue-400 rounded-full"></div>
+              </div>
               <p className="text-xl text-gray-600 dark:text-gray-400" style={{ fontFamily: 'Verdana, Arial, Helvetica, sans-serif' }}>
-                Extracting text…
+                Extracting and formatting text…
               </p>
             </div>
           )}
@@ -309,9 +339,9 @@ export default function Page() {
         </div>
 
         {/* Text Content */}
-        <div className="flex-1 overflow-auto p-8 lg:p-16">
+        <div className="flex-1 overflow-auto p-8 lg:p-16 flex items-center justify-center">
           <div style={dyslexiaStyles} className="mx-auto max-w-4xl">
-            {displayText}
+            {parseMarkdownText(displayText)}
           </div>
         </div>
 
