@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from google.cloud import vision
+import google.genai as genai
 import os
 import tempfile
 import base64
@@ -14,6 +15,42 @@ CORS(app)
 
 # Initialize Google Cloud Vision client
 client = vision.ImageAnnotatorClient()
+
+gemini_model = "gemini-2.5-flash-lite"
+genai_client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+
+
+def format_text_with_gemini(raw_text: str) -> str:
+    """Use Gemini to correct inaccuracies and format text for readability.
+    
+    Args:
+        raw_text: Raw OCR text to be corrected and formatted.
+        
+    Returns:
+        Formatted and corrected text.
+    """
+    try:
+        prompt = f"""You are a text formatting expert. Please take the following OCR-extracted text and:
+
+1. Correct any OCR inaccuracies or misspellings
+2. Remove hyphens that result from words being split across lines (e.g., "hap-pened" -> "happened")
+3. Add paragraph breaks where appropriate for readability and logical grouping
+4. Bold section titles or headings using **text** format
+5. Preserve the overall structure and meaning of the original text
+
+Original OCR text:
+{raw_text}
+
+Please provide the corrected, formatted text only. Do not add any explanations or metadata."""
+
+        response = genai_client.models.generate_content(
+    model="gemini-2.5-flash-lite", contents=prompt
+)
+        return response.text.strip()
+    except Exception as e:
+        # If Gemini fails, return original text
+        print(f"Warning: Gemini formatting failed: {str(e)}")
+        return raw_text
 
 
 def get_document_blocks(image_file_path: str) -> dict:
@@ -53,17 +90,23 @@ def get_document_blocks(image_file_path: str) -> dict:
                 
                 # Get bounding box vertices
                 if block.bounding_box and block_text:
+                    # Format the block text using Gemini
+                    formatted_text = format_text_with_gemini(block_text)
+                    
                     vertices = []
                     for vertex in block.bounding_box.vertices:
                         vertices.append({'x': vertex.x, 'y': vertex.y})
                     
                     blocks.append({
-                        'text': block_text,
+                        'text': formatted_text,
                         'vertices': vertices
                     })
     
+    # Also format the full text
+    formatted_full_text = format_text_with_gemini(full_text) if full_text else ''
+    
     return {
-        'full_text': full_text,
+        'full_text': formatted_full_text,
         'blocks': blocks
     }
 
