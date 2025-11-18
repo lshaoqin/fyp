@@ -71,6 +71,8 @@ export default function Page() {
   );
   const [imageScale, setImageScale] = useState<ImageScale>({ width: 0, height: 0 });
   const [viewMode, setViewMode] = useState<ViewMode>("upload");
+  const [formattingBlockIndex, setFormattingBlockIndex] = useState<number | null>(null);
+  const [formattedCache, setFormattedCache] = useState<Record<string, string>>({});
 
   const dyslexiaStyles: React.CSSProperties = {
     fontFamily: 'Verdana, Arial, Helvetica, sans-serif',
@@ -134,6 +136,53 @@ export default function Page() {
     });
   };
 
+  const formatBlockText = async (blockIndex: number) => {
+    if (!result) return;
+    
+    const cacheKey = `block-${blockIndex}`;
+    
+    // Check if already formatted
+    if (formattedCache[cacheKey]) {
+      setSelectedBlockIndex(blockIndex);
+      setViewMode("text");
+      return;
+    }
+    
+    // Start formatting
+    setFormattingBlockIndex(blockIndex);
+    
+    try {
+      const rawText = result.blocks[blockIndex].text;
+      
+      const response = await fetch("/api/format-text", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: rawText }),
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to format text");
+      }
+      
+      const data = await response.json();
+      
+      // Cache the formatted text
+      setFormattedCache((prev) => ({
+        ...prev,
+        [cacheKey]: data.formatted_text,
+      }));
+      
+      setSelectedBlockIndex(blockIndex);
+      setViewMode("text");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setError(msg);
+    } finally {
+      setFormattingBlockIndex(null);
+    }
+  };
+
   const renderBoundingBoxes = () => {
     if (!result || !imageScale.width || !imageScale.naturalWidth) return null;
 
@@ -170,10 +219,7 @@ export default function Page() {
                 fill={isSelected ? 'rgba(37, 99, 235, 0.3)' : 'rgba(255, 193, 7, 0.15)'}
                 stroke={isSelected ? '#2563eb' : '#ffc107'}
                 strokeWidth="3"
-                onClick={() => {
-                  setSelectedBlockIndex(index);
-                  setViewMode("text");
-                }}
+                onClick={() => formatBlockText(index)}
                 style={{ transition: 'all 0.2s' }}
               />
             </g>
@@ -313,9 +359,11 @@ export default function Page() {
 
   // Text View
   if (viewMode === "text" && result) {
+    const cacheKey = selectedBlockIndex !== null ? `block-${selectedBlockIndex}` : null;
     const displayText = selectedBlockIndex !== null 
-      ? result.blocks[selectedBlockIndex]?.text 
+      ? formattedCache[cacheKey!] || result.blocks[selectedBlockIndex]?.text 
       : result.full_text;
+    const isFormatting = formattingBlockIndex === selectedBlockIndex;
 
     return (
       <div className="flex flex-col h-screen w-screen bg-white dark:bg-slate-950">
@@ -340,9 +388,20 @@ export default function Page() {
 
         {/* Text Content */}
         <div className="flex-1 overflow-auto p-8 lg:p-16 flex items-center justify-center">
-          <div style={dyslexiaStyles} className="mx-auto max-w-4xl">
-            {parseMarkdownText(displayText)}
-          </div>
+          {isFormatting ? (
+            <div className="flex flex-col items-center gap-6">
+              <div className="animate-spin">
+                <div className="w-16 h-16 border-4 border-blue-200 dark:border-blue-900 border-t-blue-600 dark:border-t-blue-400 rounded-full"></div>
+              </div>
+              <p className="text-xl text-gray-600 dark:text-gray-400" style={{ fontFamily: 'Verdana, Arial, Helvetica, sans-serif' }}>
+                Formatting text…
+              </p>
+            </div>
+          ) : (
+            <div style={dyslexiaStyles} className="mx-auto max-w-4xl">
+              {parseMarkdownText(displayText)}
+            </div>
+          )}
         </div>
 
         {/* Footer Actions */}

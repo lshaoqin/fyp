@@ -60,7 +60,7 @@ def get_document_blocks(image_file_path: str) -> dict:
         image_file_path: path to the image file.
         
     Returns:
-        Dictionary with full_text and blocks containing text and vertices.
+        Dictionary with full_text and blocks containing raw OCR text and vertices.
     """
     with open(image_file_path, 'rb') as image_file:
         content = image_file.read()
@@ -90,23 +90,17 @@ def get_document_blocks(image_file_path: str) -> dict:
                 
                 # Get bounding box vertices
                 if block.bounding_box and block_text:
-                    # Format the block text using Gemini
-                    formatted_text = format_text_with_gemini(block_text)
-                    
                     vertices = []
                     for vertex in block.bounding_box.vertices:
                         vertices.append({'x': vertex.x, 'y': vertex.y})
                     
                     blocks.append({
-                        'text': formatted_text,
+                        'text': block_text,
                         'vertices': vertices
                     })
     
-    # Also format the full text
-    formatted_full_text = format_text_with_gemini(full_text) if full_text else ''
-    
     return {
-        'full_text': formatted_full_text,
+        'full_text': full_text,
         'blocks': blocks
     }
 
@@ -158,6 +152,38 @@ def extract():
                 os.unlink(tmp_path)
             except:
                 pass
+    
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/format-text', methods=['POST'])
+def format_text():
+    """Format raw OCR text using Gemini.
+    
+    Expects JSON with:
+    {
+        "text": "raw ocr text to format"
+    }
+    
+    Returns:
+    {
+        "formatted_text": "formatted and corrected text"
+    }
+    """
+    try:
+        data = request.get_json()
+        if not data or 'text' not in data:
+            return jsonify({"error": "No text provided"}), 400
+        
+        raw_text = data['text']
+        if not raw_text or not raw_text.strip():
+            return jsonify({"error": "Empty text"}), 400
+        
+        # Format the text using Gemini
+        formatted_text = format_text_with_gemini(raw_text)
+        
+        return jsonify({"formatted_text": formatted_text}), 200
     
     except Exception as e:
         return jsonify({"error": str(e)}), 500
