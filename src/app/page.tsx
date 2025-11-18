@@ -345,6 +345,20 @@ export default function Page() {
               {renderBoundingBoxes()}
             </div>
           </div>
+          
+          {/* Loading Overlay */}
+          {formattingBlockIndex !== null && (
+            <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+              <div className="flex flex-col items-center gap-6">
+                <div className="animate-spin">
+                  <div className="w-16 h-16 border-4 border-yellow-200 border-t-yellow-500 rounded-full"></div>
+                </div>
+                <p className="text-lg text-white font-semibold" style={{ fontFamily: 'Verdana, Arial, Helvetica, sans-serif' }}>
+                  Formatting text…
+                </p>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Footer */}
