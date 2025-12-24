@@ -1,20 +1,78 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Project Overview
+
+A dyslexia-friendly document text extraction and formatting application that uploads images, extracts text using Google Vision API, and intelligently formats text using Google Gemini API.
+
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
 
+- Node.js 18+ and npm/yarn
+- Python 3.8+
+- Google Cloud Vision API credentials
+- Google Gemini API key
+
+### Backend Setup (Flask)
+
+1. Navigate to the backend directory:
+```bash
+cd backend
+```
+
+2. Create a virtual environment:
+```bash
+python -m venv venv
+```
+
+3. Activate the virtual environment:
+```bash
+# Windows
+venv\Scripts\activate
+# macOS/Linux
+source venv/bin/activate
+```
+
+4. Install dependencies:
+```bash
+pip install -r requirements.txt
+```
+
+5. Create a `.env` file in the backend directory with:
+```env
+GEMINI_API_KEY=your_gemini_api_key_here
+GOOGLE_APPLICATION_CREDENTIALS=path_to_google_cloud_credentials.json
+```
+
+6. Run the Flask backend:
+```bash
+python app.py
+```
+
+The backend will start on `http://localhost:5000`
+
+### Frontend Setup (Next.js)
+
+1. Install dependencies:
+```bash
+npm install
+# or
+yarn install
+```
+
+2. Create a `.env.local` file in the root directory (optional, if backend is not on localhost:5000):
+```env
+NEXT_PUBLIC_PYTHON_BACKEND_URL=http://localhost:5000
+```
+
+3. Run the development server:
 ```bash
 npm run dev
 # or
 yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the application.
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
