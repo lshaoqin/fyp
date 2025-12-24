@@ -7,6 +7,9 @@ import tempfile
 import base64
 from pathlib import Path
 from dotenv import load_dotenv
+from kokoro import KPipeline
+import soundfile as sf
+import io
 
 load_dotenv()
 
@@ -18,6 +21,16 @@ client = vision.ImageAnnotatorClient()
 
 gemini_model = "gemini-2.5-flash-lite"
 genai_client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+
+# Initialize Kokoro TTS pipeline
+tts_pipeline = None
+
+def get_tts_pipeline():
+    """Lazy load TTS pipeline on first use."""
+    global tts_pipeline
+    if tts_pipeline is None:
+        tts_pipeline = KPipeline(lang_code='a')
+    return tts_pipeline
 
 
 def format_text_with_gemini(raw_text: str) -> str:
@@ -184,6 +197,62 @@ def format_text():
         formatted_text = format_text_with_gemini(raw_text)
         
         return jsonify({"formatted_text": formatted_text}), 200
+    
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/tts', methods=['POST'])
+def text_to_speech():
+    """Convert text to speech using Kokoro TTS.
+    
+    Expects JSON with:
+    {
+        "text": "text to convert to speech",
+        "voice": "voice_id" (optional, defaults to 'af_heart')
+    }
+    
+    Returns:
+    {
+        "audio": "base64-encoded audio data",
+        "sample_rate": 24000
+    }
+    """
+    try:
+        data = request.get_json()
+        if not data or 'text' not in data:
+            return jsonify({"error": "No text provided"}), 400
+        
+        text = data['text']
+        voice = data.get('voice', 'af_heart')
+        
+        if not text or not text.strip():
+            return jsonify({"error": "Empty text"}), 400
+        
+        # Get TTS pipeline
+        pipeline = get_tts_pipeline()
+        
+        # Generate audio
+        generator = pipeline(text, voice=voice)
+        
+        # Collect audio data from generator
+        audio_data = None
+        for gs, ps, audio in generator:
+            audio_data = audio
+            break  # Take first chunk
+        
+        if audio_data is None:
+            return jsonify({"error": "Failed to generate audio"}), 500
+        
+        # Convert audio to bytes and encode as base64
+        audio_buffer = io.BytesIO()
+        sf.write(audio_buffer, audio_data, 24000, format='WAV')
+        audio_bytes = audio_buffer.getvalue()
+        audio_base64 = base64.b64encode(audio_bytes).decode('utf-8')
+        
+        return jsonify({
+            "audio": audio_base64,
+            "sample_rate": 24000
+        }), 200
     
     except Exception as e:
         return jsonify({"error": str(e)}), 500
