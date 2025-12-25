@@ -30,7 +30,7 @@ def get_tts_pipeline():
     """Lazy load TTS pipeline on first use."""
     global tts_pipeline
     if tts_pipeline is None:
-        tts_pipeline = KPipeline(lang_code='a')
+        tts_pipeline = KPipeline(lang_code='b')
     return tts_pipeline
 
 
