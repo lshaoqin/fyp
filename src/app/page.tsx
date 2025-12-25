@@ -6,14 +6,12 @@ import {
   UploadIcon,
   FileTextIcon,
   ReaderIcon,
-  GearIcon,
-  PersonIcon,
-  ArrowLeftIcon,
   Share1Icon,
   SpeakerLoudIcon,
   Pencil2Icon,
   BookmarkIcon,
 } from "@radix-ui/react-icons";
+import { Button, Header, ViewBox, TextViewBox, LoadingSpinner } from "@/components";
 
 interface TextBlock {
   text: string;
@@ -73,21 +71,8 @@ export default function Page() {
   const [viewMode, setViewMode] = useState<ViewMode>("upload");
   const [formattingBlockIndex, setFormattingBlockIndex] = useState<number | null>(null);
   const [formattedCache, setFormattedCache] = useState<Record<string, string>>({});
-
-  const dyslexiaStyles: React.CSSProperties = {
-    fontFamily: 'Verdana, Arial, Helvetica, sans-serif',
-    fontSize: '20px',
-    lineHeight: 1.8,
-    letterSpacing: '0.03em',
-    wordSpacing: '0.12em',
-    backgroundColor: '#f7fbf6',
-    color: '#0f172a',
-    padding: '2rem',
-    borderRadius: 8,
-    textAlign: 'left' as const,
-    whiteSpace: 'pre-wrap' as const,
-    overflowWrap: 'break-word' as const,
-  };
+  const [isPlayingAudio, setIsPlayingAudio] = useState(false);
+  const audioRef = React.useRef<HTMLAudioElement | null>(null);
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -288,21 +273,14 @@ export default function Page() {
           </div>
 
           {loading && (
-            <div className="text-center flex flex-col items-center gap-6">
-              <div className="animate-spin">
-                <div className="w-16 h-16 border-4 border-blue-200 dark:border-blue-900 border-t-blue-600 dark:border-t-blue-400 rounded-full"></div>
-              </div>
-              <p className="text-xl text-gray-600 dark:text-gray-400" style={{ fontFamily: 'Verdana, Arial, Helvetica, sans-serif' }}>
-                Extracting and formatting text…
-              </p>
-            </div>
+            <LoadingSpinner label="Extracting and formatting text…" size="md" color="blue" />
           )}
           {error && (
-            <div className="text-center bg-red-100 dark:bg-red-950 p-6 rounded-xl w-full max-w-xl">
+            <ViewBox variant="error" className="w-full max-w-xl">
               <p className="text-lg text-red-700 dark:text-red-300" style={{ fontFamily: 'Verdana, Arial, Helvetica, sans-serif' }}>
                 Error: {error}
               </p>
-            </div>
+            </ViewBox>
           )}
         </main>
       </div>
@@ -313,24 +291,7 @@ export default function Page() {
   if (viewMode === "image" && result) {
     return (
       <div className="flex flex-col h-screen w-screen bg-black">
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 bg-white dark:bg-slate-900 border-b-4 border-yellow-500">
-          <button
-            onClick={() => setViewMode("upload")}
-            className="flex items-center gap-3 text-blue-600 dark:text-blue-400 hover:text-yellow-500 transition-colors"
-          >
-            <ArrowLeftIcon className="w-7 h-7" />
-            <span className="text-lg font-bold" style={{ fontFamily: 'Verdana, Arial, Helvetica, sans-serif' }}>Back</span>
-          </button>
-          <div className="flex gap-6">
-            <button className="text-gray-600 dark:text-gray-400 hover:text-yellow-500 transition-colors">
-              <GearIcon className="w-7 h-7" />
-            </button>
-            <button className="text-gray-600 dark:text-gray-400 hover:text-yellow-500 transition-colors">
-              <PersonIcon className="w-7 h-7" />
-            </button>
-          </div>
-        </div>
+        <Header onBackClick={() => setViewMode("upload")} />
 
         {/* Image Container */}
         <div className="flex-1 flex items-center justify-center relative bg-black overflow-hidden">
@@ -341,6 +302,7 @@ export default function Page() {
                 alt="Uploaded document"
                 onLoad={handleImageLoad}
                 className="max-w-full max-h-[calc(100vh-120px)] object-contain"
+                suppressHydrationWarning
               />
               {renderBoundingBoxes()}
             </div>
@@ -349,14 +311,7 @@ export default function Page() {
           {/* Loading Overlay */}
           {formattingBlockIndex !== null && (
             <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-              <div className="flex flex-col items-center gap-6">
-                <div className="animate-spin">
-                  <div className="w-16 h-16 border-4 border-yellow-200 border-t-yellow-500 rounded-full"></div>
-                </div>
-                <p className="text-lg text-white font-semibold" style={{ fontFamily: 'Verdana, Arial, Helvetica, sans-serif' }}>
-                  Formatting text…
-                </p>
-              </div>
+              <LoadingSpinner label="Formatting text…" size="md" color="yellow" />
             </div>
           )}
         </div>
@@ -379,72 +334,92 @@ export default function Page() {
       : result.full_text;
     const isFormatting = formattingBlockIndex === selectedBlockIndex;
 
+    const handleListen = async () => {
+      if (!displayText) {
+        setError("No text to listen to");
+        return;
+      }
+
+      setIsPlayingAudio(true);
+      setError(null);
+
+      try {
+        const response = await fetch("/api/tts", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: displayText }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || "Failed to generate audio");
+        }
+
+        const data = await response.json();
+        
+        // Decode base64 audio and create blob
+        const binaryString = atob(data.audio);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        const audioBlob = new Blob([bytes], { type: "audio/wav" });
+        const audioUrl = URL.createObjectURL(audioBlob);
+
+        // Play audio
+        if (audioRef.current) {
+          audioRef.current.src = audioUrl;
+          audioRef.current.play();
+        }
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        setError(msg);
+      } finally {
+        setIsPlayingAudio(false);
+      }
+    };
+
     return (
       <div className="flex flex-col h-screen w-screen bg-white dark:bg-slate-950">
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 bg-white dark:bg-slate-900 border-b-4 border-yellow-500">
-          <button
-            onClick={() => setViewMode("image")}
-            className="flex items-center gap-3 text-blue-600 dark:text-blue-400 hover:text-yellow-500 transition-colors"
-          >
-            <ArrowLeftIcon className="w-7 h-7" />
-            <span className="text-lg font-bold" style={{ fontFamily: 'Verdana, Arial, Helvetica, sans-serif' }}>Back</span>
-          </button>
-          <div className="flex gap-6">
-            <button className="text-gray-600 dark:text-gray-400 hover:text-yellow-500 transition-colors">
-              <GearIcon className="w-7 h-7" />
-            </button>
-            <button className="text-gray-600 dark:text-gray-400 hover:text-yellow-500 transition-colors">
-              <PersonIcon className="w-7 h-7" />
-            </button>
-          </div>
-        </div>
+        <Header onBackClick={() => setViewMode("image")} />
 
         {/* Text Content */}
         <div className="flex-1 overflow-auto p-8 lg:p-16 flex items-center justify-center">
           {isFormatting ? (
-            <div className="flex flex-col items-center gap-6">
-              <div className="animate-spin">
-                <div className="w-16 h-16 border-4 border-blue-200 dark:border-blue-900 border-t-blue-600 dark:border-t-blue-400 rounded-full"></div>
-              </div>
-              <p className="text-xl text-gray-600 dark:text-gray-400" style={{ fontFamily: 'Verdana, Arial, Helvetica, sans-serif' }}>
-                Formatting text…
-              </p>
-            </div>
+            <LoadingSpinner label="Formatting text…" size="md" color="blue" />
           ) : (
-            <div style={dyslexiaStyles} className="mx-auto max-w-4xl">
+            <TextViewBox>
               {parseMarkdownText(displayText)}
-            </div>
+            </TextViewBox>
           )}
         </div>
 
         {/* Footer Actions */}
         <div className="flex gap-4 p-6 bg-white dark:bg-slate-900 border-t-4 border-yellow-500 flex-wrap justify-center">
-          <button className="px-8 py-4 flex items-center gap-3 text-blue-600 dark:text-blue-400 border-2 border-blue-600 dark:border-blue-400 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950 transition-colors font-bold text-base" style={{ fontFamily: 'Verdana, Arial, Helvetica, sans-serif' }}>
-            <FileTextIcon className="w-6 h-6" />
+          <Button icon={<FileTextIcon className="w-6 h-6" />}>
             Text-only mode
-          </button>
-          <button className="px-8 py-4 flex items-center gap-3 text-blue-600 dark:text-blue-400 border-2 border-blue-600 dark:border-blue-400 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950 transition-colors font-bold text-base" style={{ fontFamily: 'Verdana, Arial, Helvetica, sans-serif' }}>
-            <Share1Icon className="w-6 h-6" />
+          </Button>
+          <Button icon={<Share1Icon className="w-6 h-6" />}>
             Share with others
-          </button>
-          <button className="px-8 py-4 flex items-center gap-3 text-blue-600 dark:text-blue-400 border-2 border-blue-600 dark:border-blue-400 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950 transition-colors font-bold text-base" style={{ fontFamily: 'Verdana, Arial, Helvetica, sans-serif' }}>
-            <SpeakerLoudIcon className="w-6 h-6" />
-            Listen
-          </button>
-          <button className="px-8 py-4 flex items-center gap-3 text-blue-600 dark:text-blue-400 border-2 border-blue-600 dark:border-blue-400 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950 transition-colors font-bold text-base" style={{ fontFamily: 'Verdana, Arial, Helvetica, sans-serif' }}>
-            <img src="/mic.svg" alt="Read" className="w-6 h-6" />
+          </Button>
+          <Button 
+            onClick={handleListen}
+            disabled={isPlayingAudio}
+            icon={<SpeakerLoudIcon className="w-6 h-6" />}
+          >
+            {isPlayingAudio ? "Playing..." : "Listen"}
+          </Button>
+          <Button icon={<img src="/mic.svg" alt="Read" className="w-6 h-6" suppressHydrationWarning />}>
             Read
-          </button>
-          <button className="px-8 py-4 flex items-center gap-3 text-blue-600 dark:text-blue-400 border-2 border-blue-600 dark:border-blue-400 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950 transition-colors font-bold text-base" style={{ fontFamily: 'Verdana, Arial, Helvetica, sans-serif' }}>
-            <Pencil2Icon className="w-6 h-6" />
+          </Button>
+          <Button icon={<Pencil2Icon className="w-6 h-6" />}>
             Edit
-          </button>
-          <button className="px-8 py-4 flex items-center gap-3 text-blue-600 dark:text-blue-400 border-2 border-blue-600 dark:border-blue-400 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950 transition-colors font-bold text-base" style={{ fontFamily: 'Verdana, Arial, Helvetica, sans-serif' }}>
-            <BookmarkIcon className="w-6 h-6" />
+          </Button>
+          <Button icon={<BookmarkIcon className="w-6 h-6" />}>
             Notes
-          </button>
+          </Button>
         </div>
+        <audio ref={audioRef} onEnded={() => setIsPlayingAudio(false)} />
       </div>
     );
   }
