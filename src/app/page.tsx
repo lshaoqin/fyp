@@ -62,6 +62,8 @@ export default function Page() {
   const [formattingBlockIndex, setFormattingBlockIndex] = useState<number | null>(null);
   const [formattedCache, setFormattedCache] = useState<Record<string, string>>({});
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
+  const [cachedAudioUrl, setCachedAudioUrl] = useState<string | null>(null);
+  const [cachedAudioKey, setCachedAudioKey] = useState<string | null>(null);
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -91,6 +93,9 @@ export default function Page() {
       const data = await res.json();
       if (data.error) throw new Error(data.error);
       setResult(data);
+      // Clear audio cache when uploading new file
+      setCachedAudioUrl(null);
+      setCachedAudioKey(null);
       setViewMode("image");
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
@@ -119,6 +124,9 @@ export default function Page() {
     // Check if already formatted
     if (formattedCache[cacheKey]) {
       setSelectedBlockIndex(blockIndex);
+      // Clear audio cache when selecting new text block
+      setCachedAudioUrl(null);
+      setCachedAudioKey(null);
       setViewMode("text");
       return;
     }
@@ -149,6 +157,9 @@ export default function Page() {
       }));
       
       setSelectedBlockIndex(blockIndex);
+      // Clear audio cache when selecting new text block
+      setCachedAudioUrl(null);
+      setCachedAudioKey(null);
       setViewMode("text");
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
@@ -159,13 +170,31 @@ export default function Page() {
   };
 
   const handleListen = async () => {
-    const cacheKey = selectedBlockIndex !== null ? `block-${selectedBlockIndex}` : null;
+    const audioCacheKey = selectedBlockIndex !== null ? `block-${selectedBlockIndex}` : "full-text";
     const displayText = selectedBlockIndex !== null 
-      ? formattedCache[cacheKey!] || result?.blocks[selectedBlockIndex]?.text 
+      ? formattedCache[`block-${selectedBlockIndex}`] || result?.blocks[selectedBlockIndex]?.text 
       : result?.full_text;
 
     if (!displayText) {
       setError("No text to listen to");
+      return;
+    }
+
+    // Check if audio is already cached for this text
+    if (cachedAudioUrl && cachedAudioKey === audioCacheKey) {
+      setIsPlayingAudio(true);
+      setError(null);
+      try {
+        if (audioRef.current) {
+          audioRef.current.src = cachedAudioUrl;
+          audioRef.current.play();
+        }
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        setError(msg);
+      } finally {
+        setIsPlayingAudio(false);
+      }
       return;
     }
 
@@ -194,6 +223,10 @@ export default function Page() {
       }
       const audioBlob = new Blob([bytes], { type: "audio/wav" });
       const audioUrl = URL.createObjectURL(audioBlob);
+
+      // Cache the audio URL
+      setCachedAudioUrl(audioUrl);
+      setCachedAudioKey(audioCacheKey);
 
       // Play audio
       if (audioRef.current) {
@@ -227,7 +260,12 @@ export default function Page() {
         imageScale={imageScale}
         selectedBlockIndex={selectedBlockIndex}
         formattingBlockIndex={formattingBlockIndex}
-        onBackClick={() => setViewMode("upload")}
+        onBackClick={() => {
+          setViewMode("upload");
+          // Clear audio cache when going back to upload
+          setCachedAudioUrl(null);
+          setCachedAudioKey(null);
+        }}
         onImageLoad={handleImageLoad}
         onBlockClick={formatBlockText}
       />
