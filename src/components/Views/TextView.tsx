@@ -1,6 +1,6 @@
 "use client";
 
-import React, { ReactNode } from "react";
+import React, { ReactNode, useState, useEffect } from "react";
 import {
   FileTextIcon,
   Share1Icon,
@@ -8,25 +8,52 @@ import {
   Pencil2Icon,
   BookmarkIcon,
 } from "@radix-ui/react-icons";
-import { Button, Header, TextViewBox, LoadingSpinner } from "@/components";
+import { Button, Header, TextViewBox, LoadingSpinner, MediaPlayer } from "@/components";
 
 interface TextViewProps {
   displayText: string;
   isFormatting: boolean;
+  isLoadingAudio: boolean;
   isPlayingAudio: boolean;
+  audioRef: React.RefObject<HTMLAudioElement>;
   onBackClick: () => void;
   onListen: () => void;
+  onPlayPauseAudio: () => void;
+  onStopAudio: () => void;
   parseMarkdownText: (text: string) => ReactNode;
 }
 
 export const TextView: React.FC<TextViewProps> = ({
   displayText,
   isFormatting,
+  isLoadingAudio,
   isPlayingAudio,
+  audioRef,
   onBackClick,
   onListen,
+  onPlayPauseAudio,
+  onStopAudio,
   parseMarkdownText,
 }) => {
+  const [hasAudioLoaded, setHasAudioLoaded] = useState(false);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const handleLoadStart = () => {
+      setHasAudioLoaded(true);
+    };
+
+    audio.addEventListener("loadstart", handleLoadStart);
+
+    return () => {
+      audio.removeEventListener("loadstart", handleLoadStart);
+    };
+  }, [audioRef]);
+
+  const showMediaPlayer = isLoadingAudio || isPlayingAudio || hasAudioLoaded;
+
   return (
     <div className="flex flex-col h-screen w-screen bg-white dark:bg-slate-950">
       <Header onBackClick={onBackClick} />
@@ -46,37 +73,59 @@ export const TextView: React.FC<TextViewProps> = ({
 
       {/* Footer Actions */}
       <div className="flex gap-4 p-6 bg-white dark:bg-slate-900 border-t-4 border-yellow-500 flex-wrap justify-center">
-        <Button icon={<FileTextIcon className="w-6 h-6" />}>
-          Text-only mode
-        </Button>
-        <Button icon={<Share1Icon className="w-6 h-6" />}>
-          Share with others
-        </Button>
-        <Button
-          onClick={onListen}
-          disabled={isPlayingAudio}
-          icon={<SpeakerLoudIcon className="w-6 h-6" />}
-        >
-          {isPlayingAudio ? "Playing..." : "Listen"}
-        </Button>
-        <Button
-          icon={
-            <img
-              src="/mic.svg"
-              alt="Read"
-              className="w-6 h-6"
-              suppressHydrationWarning
-            />
-          }
-        >
-          Read
-        </Button>
-        <Button icon={<Pencil2Icon className="w-6 h-6" />}>
-          Edit
-        </Button>
-        <Button icon={<BookmarkIcon className="w-6 h-6" />}>
-          Notes
-        </Button>
+        {showMediaPlayer && !isFormatting ? (
+          <>
+            {isLoadingAudio ? (
+              <div className="flex items-center gap-2">
+                <LoadingSpinner size="sm" color="blue" />
+                <span className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                  Generating audio…
+                </span>
+              </div>
+            ) : (
+              <MediaPlayer
+                audioRef={audioRef}
+                isPlaying={isPlayingAudio}
+                onPlayPause={onPlayPauseAudio}
+                onStop={onStopAudio}
+              />
+            )}
+          </>
+        ) : (
+          <>
+            <Button icon={<FileTextIcon className="w-6 h-6" />}>
+              Text-only mode
+            </Button>
+            <Button icon={<Share1Icon className="w-6 h-6" />}>
+              Share with others
+            </Button>
+            <Button
+              onClick={onListen}
+              disabled={isFormatting}
+              icon={<SpeakerLoudIcon className="w-6 h-6" />}
+            >
+              Listen
+            </Button>
+            <Button
+              icon={
+                <img
+                  src="/mic.svg"
+                  alt="Read"
+                  className="w-6 h-6"
+                  suppressHydrationWarning
+                />
+              }
+            >
+              Read
+            </Button>
+            <Button icon={<Pencil2Icon className="w-6 h-6" />}>
+              Edit
+            </Button>
+            <Button icon={<BookmarkIcon className="w-6 h-6" />}>
+              Notes
+            </Button>
+          </>
+        )}
       </div>
     </div>
   );

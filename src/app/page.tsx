@@ -62,9 +62,10 @@ export default function Page() {
   const [formattingBlockIndex, setFormattingBlockIndex] = useState<number | null>(null);
   const [formattedCache, setFormattedCache] = useState<Record<string, string>>({});
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
+  const [isLoadingAudio, setIsLoadingAudio] = useState(false);
   const [cachedAudioUrl, setCachedAudioUrl] = useState<string | null>(null);
   const [cachedAudioKey, setCachedAudioKey] = useState<string | null>(null);
-  const audioRef = React.useRef<HTMLAudioElement | null>(null);
+  const audioRef = React.useRef<HTMLAudioElement>(null!);
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -180,25 +181,20 @@ export default function Page() {
       return;
     }
 
-    // Check if audio is already cached for this text
-    if (cachedAudioUrl && cachedAudioKey === audioCacheKey) {
-      setIsPlayingAudio(true);
-      setError(null);
-      try {
-        if (audioRef.current) {
-          audioRef.current.src = cachedAudioUrl;
-          audioRef.current.play();
-        }
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err);
-        setError(msg);
-      } finally {
+    // If audio is already playing, toggle play/pause
+    if (cachedAudioUrl && cachedAudioKey === audioCacheKey && audioRef.current) {
+      if (isPlayingAudio) {
+        audioRef.current.pause();
         setIsPlayingAudio(false);
+      } else {
+        audioRef.current.play();
+        setIsPlayingAudio(true);
       }
       return;
     }
 
-    setIsPlayingAudio(true);
+    // Load audio from API
+    setIsLoadingAudio(true);
     setError(null);
 
     try {
@@ -232,11 +228,32 @@ export default function Page() {
       if (audioRef.current) {
         audioRef.current.src = audioUrl;
         audioRef.current.play();
+        setIsPlayingAudio(true);
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       setError(msg);
     } finally {
+      setIsLoadingAudio(false);
+    }
+  };
+
+  const handlePlayPauseAudio = () => {
+    if (audioRef.current) {
+      if (isPlayingAudio) {
+        audioRef.current.pause();
+        setIsPlayingAudio(false);
+      } else {
+        audioRef.current.play();
+        setIsPlayingAudio(true);
+      }
+    }
+  };
+
+  const handleStopAudio = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
       setIsPlayingAudio(false);
     }
   };
@@ -285,9 +302,13 @@ export default function Page() {
         <TextView
           displayText={displayText}
           isFormatting={isFormatting}
+          isLoadingAudio={isLoadingAudio}
           isPlayingAudio={isPlayingAudio}
+          audioRef={audioRef}
           onBackClick={() => setViewMode("image")}
           onListen={handleListen}
+          onPlayPauseAudio={handlePlayPauseAudio}
+          onStopAudio={handleStopAudio}
           parseMarkdownText={parseMarkdownText}
         />
         <audio ref={audioRef} onEnded={() => setIsPlayingAudio(false)} />
