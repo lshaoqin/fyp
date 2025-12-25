@@ -78,9 +78,6 @@ export const TextView: React.FC<TextViewProps> = ({
             {isLoadingAudio ? (
               <div className="flex items-center gap-2">
                 <LoadingSpinner size="sm" color="blue" />
-                <span className="text-sm font-medium text-slate-600 dark:text-slate-400">
-                  Generating audio…
-                </span>
               </div>
             ) : (
               <MediaPlayer
