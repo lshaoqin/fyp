@@ -1,0 +1,119 @@
+"use client";
+
+import React from "react";
+import {
+  CameraIcon,
+  UploadIcon,
+  FileTextIcon,
+  ReaderIcon,
+} from "@radix-ui/react-icons";
+import { LoadingSpinner, ViewBox } from "@/components";
+
+interface UploadViewProps {
+  loading: boolean;
+  error: string | null;
+  onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+}
+
+export const UploadView: React.FC<UploadViewProps> = ({
+  loading,
+  error,
+  onFileChange,
+}) => {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-white dark:bg-slate-950">
+      <main className="flex flex-col items-center justify-center gap-12 px-6 max-w-2xl">
+        <div className="text-center mb-8">
+          <h1
+            className="text-5xl font-bold mb-4 text-blue-600"
+            style={{ fontFamily: "Verdana, Arial, Helvetica, sans-serif" }}
+          >
+            Make text friendlier
+          </h1>
+          <p
+            className="text-2xl text-gray-700 dark:text-gray-300"
+            style={{ fontFamily: "Verdana, Arial, Helvetica, sans-serif" }}
+          >
+            Take a photo of some text to make it friendlier
+          </p>
+        </div>
+
+        <div className="grid grid-cols-2 gap-8 w-full max-w-2xl">
+          <label className="flex flex-col items-center justify-center p-12 border-4 border-blue-600 rounded-xl cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-950 transition-colors group">
+            <CameraIcon className="w-24 h-24 mb-4 text-blue-600 transition-colors" />
+            <span
+              className="font-bold text-lg text-center text-blue-600 dark:text-blue-400"
+              style={{ fontFamily: "Verdana, Arial, Helvetica, sans-serif" }}
+            >
+              Take a photo
+            </span>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={onFileChange}
+              className="hidden"
+            />
+          </label>
+
+          <label className="flex flex-col items-center justify-center p-12 border-4 border-blue-600 rounded-xl cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-950 transition-colors group">
+            <UploadIcon className="w-24 h-24 mb-4 text-blue-600 transition-colors" />
+            <span
+              className="font-bold text-lg text-center text-blue-600 dark:text-blue-400"
+              style={{ fontFamily: "Verdana, Arial, Helvetica, sans-serif" }}
+            >
+              Upload from device
+            </span>
+            <input
+              type="file"
+              accept="image/*,application/pdf"
+              onChange={onFileChange}
+              className="hidden"
+            />
+          </label>
+        </div>
+
+        <div className="grid grid-cols-2 gap-6 w-full max-w-2xl mt-4">
+          <button className="flex flex-col items-center justify-center p-8 border-4 border-gray-400 rounded-xl hover:border-yellow-500 hover:bg-yellow-50 dark:hover:bg-yellow-950 transition-all group">
+            <FileTextIcon className="w-20 h-20 mb-3 text-gray-600 dark:text-gray-400 group-hover:text-yellow-500 transition-colors" />
+            <span
+              className="text-base text-center font-bold text-gray-700 dark:text-gray-300"
+              style={{ fontFamily: "Verdana, Arial, Helvetica, sans-serif" }}
+            >
+              My previous files
+            </span>
+          </button>
+
+          <button className="flex flex-col items-center justify-center p-8 border-4 border-gray-400 rounded-xl hover:border-yellow-500 hover:bg-yellow-50 dark:hover:bg-yellow-950 transition-all group">
+            <ReaderIcon className="w-20 h-20 mb-3 text-gray-600 dark:text-gray-400 group-hover:text-yellow-500 transition-colors" />
+            <span
+              className="text-base text-center font-bold text-gray-700 dark:text-gray-300"
+              style={{ fontFamily: "Verdana, Arial, Helvetica, sans-serif" }}
+            >
+              Discover others&apos; files
+            </span>
+          </button>
+        </div>
+
+        {loading && (
+          <LoadingSpinner
+            label="Extracting and formatting text…"
+            size="md"
+            color="blue"
+          />
+        )}
+        {error && (
+          <ViewBox variant="error" className="w-full max-w-xl">
+            <p
+              className="text-lg text-red-700 dark:text-red-300"
+              style={{ fontFamily: "Verdana, Arial, Helvetica, sans-serif" }}
+            >
+              Error: {error}
+            </p>
+          </ViewBox>
+        )}
+      </main>
+    </div>
+  );
+};
+
+export default UploadView;
