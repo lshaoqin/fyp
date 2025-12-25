@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 from kokoro import KPipeline
 import soundfile as sf
 import io
+import numpy as np
 
 load_dotenv()
 
@@ -234,14 +235,16 @@ def text_to_speech():
         # Generate audio
         generator = pipeline(text, voice=voice)
         
-        # Collect audio data from generator
-        audio_data = None
+        # Collect all audio chunks from generator
+        audio_chunks = []
         for gs, ps, audio in generator:
-            audio_data = audio
-            break  # Take first chunk
+            audio_chunks.append(audio)
         
-        if audio_data is None:
+        if not audio_chunks:
             return jsonify({"error": "Failed to generate audio"}), 500
+        
+        # Concatenate all audio chunks
+        audio_data = np.concatenate(audio_chunks)
         
         # Convert audio to bytes and encode as base64
         audio_buffer = io.BytesIO()
