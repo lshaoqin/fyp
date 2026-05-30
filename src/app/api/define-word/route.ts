@@ -3,7 +3,7 @@ import { requireFirebaseAuth } from "@/utils/require-firebase-auth";
 
 export async function POST(request: NextRequest) {
   try {
-    const authResult = await requireFirebaseAuth(request);
+    const authResult = await requireFirebaseAuth(request, true);
     if (authResult instanceof NextResponse) return authResult;
 
     const body = await request.json();
@@ -21,12 +21,16 @@ export async function POST(request: NextRequest) {
         typeof contextSentence === "string" ? contextSentence.trim() : "",
     };
 
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+    };
+    if (authResult?.token) {
+      headers["Authorization"] = `Bearer ${authResult.token}`;
+    }
+
     const response = await fetch(`${backendUrl}/define-word`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${authResult.token}`,
-      },
+      headers,
       body: JSON.stringify(payload),
     });
 

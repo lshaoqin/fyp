@@ -91,3 +91,30 @@ def require_firebase_auth(route_handler):
         return route_handler(*args, **kwargs)
 
     return wrapped
+
+def optional_firebase_auth(route_handler):
+    """Decorator to optionally use Firebase ID token authentication."""
+    @wraps(route_handler)
+    def wrapped(*args, **kwargs):
+        auth_header = request.headers.get("Authorization", "")
+        if not auth_header.startswith("Bearer "):
+            g.firebase_user = None
+            return route_handler(*args, **kwargs)
+
+        token = auth_header[7:].strip()
+        if not token:
+            g.firebase_user = None
+            return route_handler(*args, **kwargs)
+
+        try:
+            _initialize_firebase_admin()
+            decoded_token = auth.verify_id_token(token)
+            g.firebase_user = decoded_token
+        except Exception as exc:
+            print(f"[Firebase Auth] optional token verification error: {type(exc).__name__}")
+            g.firebase_user = None
+
+        return route_handler(*args, **kwargs)
+
+    return wrapped
+

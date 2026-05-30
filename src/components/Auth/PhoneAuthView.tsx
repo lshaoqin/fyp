@@ -100,6 +100,10 @@ export const PhoneAuthView: React.FC<PhoneAuthViewProps> = ({
     }
   };
 
+  const handleGuestLogin = () => {
+    onAuthenticated?.();
+  };
+
   const card = (
     <div className="w-full max-w-md rounded-xl border-2 border-blue-500 bg-white dark:bg-slate-900 p-6 sm:p-8 relative">
       {onClose && (
@@ -166,6 +170,20 @@ export const PhoneAuthView: React.FC<PhoneAuthViewProps> = ({
       </div>
 
       {error && <p className="mt-4 text-sm text-red-600 dark:text-red-400">{error}</p>}
+
+      <div className="mt-6 flex items-center justify-center">
+        <div className="h-px w-full bg-gray-300 dark:bg-gray-700"></div>
+        <span className="px-3 text-sm text-gray-500">OR</span>
+        <div className="h-px w-full bg-gray-300 dark:bg-gray-700"></div>
+      </div>
+
+      <button
+        onClick={handleGuestLogin}
+        disabled={loading}
+        className="mt-6 w-full rounded-lg border border-gray-300 dark:border-gray-700 px-4 py-3 text-gray-700 dark:text-gray-300 font-semibold hover:bg-gray-50 dark:hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        {loading ? "Signing in..." : "Continue as Guest"}
+      </button>
 
       <div id={recaptchaContainerId} className="mt-5" />
     </div>

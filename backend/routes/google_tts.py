@@ -6,13 +6,13 @@ from services.elevenlabs_tts_service import (
     generate_speech_with_word_level_timestamps as generate_elevenlabs_speech,
     ElevenLabsTTSUnavailable,
 )
-from utils.firebase_auth import require_firebase_auth
+from utils.firebase_auth import optional_firebase_auth
 
 google_tts_bp = Blueprint('google_tts', __name__)
 
 
 @google_tts_bp.route('/tts/google', methods=['POST'])
-@require_firebase_auth
+@optional_firebase_auth
 def google_text_to_speech():
     """Convert text to speech with ElevenLabs-first and Google fallback.
     

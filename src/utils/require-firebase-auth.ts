@@ -8,8 +8,9 @@ export interface FirebaseAuthResult {
 }
 
 export async function requireFirebaseAuth(
-  request: NextRequest | Request
-): Promise<FirebaseAuthResult | NextResponse> {
+  request: NextRequest | Request,
+  optional: boolean = false
+): Promise<FirebaseAuthResult | null | NextResponse> {
   const authorizationHeader = request.headers.get("authorization") || "";
   const bearerToken = authorizationHeader.startsWith("Bearer ")
     ? authorizationHeader.slice(7).trim()
@@ -25,6 +26,7 @@ export async function requireFirebaseAuth(
   const token = bearerToken || cookieToken;
 
   if (!token) {
+    if (optional) return null;
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -36,6 +38,7 @@ export async function requireFirebaseAuth(
       phoneNumber: decoded.phone_number,
     };
   } catch {
+    if (optional) return null;
     return NextResponse.json({ error: "Invalid or expired token" }, { status: 401 });
   }
 }

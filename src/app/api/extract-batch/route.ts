@@ -8,7 +8,7 @@ const MAX_FILES = 20;
 
 export async function POST(req: Request) {
   try {
-    const authResult = await requireFirebaseAuth(req);
+    const authResult = await requireFirebaseAuth(req, true);
     if (authResult instanceof NextResponse) return authResult;
 
     const form = await req.formData();
@@ -33,12 +33,15 @@ export async function POST(req: Request) {
       formData.append("files", file);
     });
 
+    const headers: Record<string, string> = {};
+    if (authResult?.token) {
+      headers["Authorization"] = `Bearer ${authResult.token}`;
+    }
+
     try {
       const response = await fetch(`${backendUrl}/extract-batch`, {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${authResult.token}`,
-        },
+        headers,
         body: formData,
       });
 

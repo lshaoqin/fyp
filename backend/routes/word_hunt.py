@@ -4,13 +4,13 @@ from flask import request, jsonify, Blueprint
 
 from services.gemini_service import get_word_hunt_vocabulary_data
 from services.google_tts_service import generate_speech_with_word_level_timestamps
-from utils.firebase_auth import require_firebase_auth
+from utils.firebase_auth import optional_firebase_auth
 
 word_hunt_bp = Blueprint('word_hunt', __name__)
 
 
 @word_hunt_bp.route('/word-hunt/vocabulary', methods=['POST'])
-@require_firebase_auth
+@optional_firebase_auth
 def get_vocabulary_word_hunt():
     """Generate a vocabulary word hunt question from text."""
     try:

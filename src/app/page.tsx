@@ -260,7 +260,17 @@ export default function Page() {
     signal?: AbortSignal
   ): Promise<Response> => {
     const backendUrl = process.env.NEXT_PUBLIC_PYTHON_BACKEND_URL || "";
-    const token = await firebaseUser!.getIdToken();
+    
+    // For guest users, skip adding Authorization header
+    if (!firebaseUser) {
+      return await fetch(`${backendUrl}${path}`, {
+        method: "POST",
+        body: formData,
+        signal,
+      });
+    }
+
+    const token = await firebaseUser.getIdToken();
     let res = await fetch(`${backendUrl}${path}`, {
       method: "POST",
       headers: { Authorization: `Bearer ${token}` },
@@ -268,7 +278,7 @@ export default function Page() {
       signal,
     });
     if (res.status === 401) {
-      const freshToken = await firebaseUser!.getIdToken(true);
+      const freshToken = await firebaseUser.getIdToken(true);
       res = await fetch(`${backendUrl}${path}`, {
         method: "POST",
         headers: { Authorization: `Bearer ${freshToken}` },
@@ -352,7 +362,7 @@ export default function Page() {
   }, [activeSavedDocumentId]);
 
   useEffect(() => {
-    if (!isAuthenticated || !firebaseUser || results.length === 0) {
+    if (!isAuthenticated || !firebaseUser || firebaseUser.isAnonymous || results.length === 0) {
       return;
     }
 
@@ -816,7 +826,7 @@ export default function Page() {
         error={error}
         onFileChange={handleFileChange}
         loadingFileCount={loadingFileCount}
-        onMyFilesClick={handleOpenSavedFiles}
+        onMyFilesClick={!firebaseUser || firebaseUser.isAnonymous ? undefined : handleOpenSavedFiles}
         onWriteTextClick={() => {
           // Set up a minimal result structure to enable EditView
           setResults([{

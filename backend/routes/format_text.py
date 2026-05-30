@@ -1,13 +1,13 @@
 """Format text endpoint."""
 from flask import request, jsonify, Blueprint
 from services.gemini_service import format_text_with_gemini
-from utils.firebase_auth import require_firebase_auth
+from utils.firebase_auth import optional_firebase_auth
 
 format_text_bp = Blueprint('format_text', __name__)
 
 
 @format_text_bp.route('/format-text', methods=['POST'])
-@require_firebase_auth
+@optional_firebase_auth
 def format_text():
     """Format raw OCR text using Gemini.
     

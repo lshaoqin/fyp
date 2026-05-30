@@ -5,7 +5,7 @@ export const runtime = "nodejs";
 
 export async function POST(req: Request) {
   try {
-    const authResult = await requireFirebaseAuth(req);
+    const authResult = await requireFirebaseAuth(req, true);
     if (authResult instanceof NextResponse) return authResult;
 
     const body = await req.json();
@@ -18,12 +18,16 @@ export async function POST(req: Request) {
     // Forward the request to the Python backend
     const backendUrl = process.env.PYTHON_BACKEND_URL || "http://localhost:8080";
 
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+    };
+    if (authResult?.token) {
+      headers["Authorization"] = `Bearer ${authResult.token}`;
+    }
+
     const response = await fetch(`${backendUrl}/format-text`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${authResult.token}`,
-      },
+      headers,
       body: JSON.stringify({ text }),
     });
 

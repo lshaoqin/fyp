@@ -8,7 +8,7 @@ from config import TTS_SAMPLE_RATE
 from services.gemini_service import get_word_learning_data
 from services.google_tts_service import generate_speech_with_word_level_timestamps
 from services.wikimedia_service import fetch_word_illustration
-from utils.firebase_auth import require_firebase_auth
+from utils.firebase_auth import optional_firebase_auth
 
 define_word_bp = Blueprint('define_word', __name__)
 
@@ -63,7 +63,7 @@ def synthesize_reading_payload(text: str) -> dict:
 
 
 @define_word_bp.route('/define-word', methods=['POST'])
-@require_firebase_auth
+@optional_firebase_auth
 def define_word():
     """Fetch word learning data from Gemini and generate TTS.
     
