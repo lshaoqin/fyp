@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
       "Content-Type": "application/json",
     };
     if (authResult?.token) {
-      headers["Authorization"] = `Bearer ${authResult.token}`;
+      headers["Authorization"] = `Bearer ${authResult!.token}`;
     }
 
     const response = await fetch(`${backendUrl}/define-word`, {

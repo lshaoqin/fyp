@@ -21,7 +21,7 @@ export async function POST(req: Request) {
       "Content-Type": "application/json",
     };
     if (authResult?.token) {
-      headers["Authorization"] = `Bearer ${authResult.token}`;
+      headers["Authorization"] = `Bearer ${authResult!.token}`;
     }
 
     const response = await fetch(`${backendUrl}/word-hunt/vocabulary`, {

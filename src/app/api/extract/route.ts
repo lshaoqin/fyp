@@ -22,7 +22,7 @@ export async function POST(req: Request) {
 
     const headers: Record<string, string> = {};
     if (authResult?.token) {
-      headers["Authorization"] = `Bearer ${authResult.token}`;
+      headers["Authorization"] = `Bearer ${authResult!.token}`;
     }
 
     try {

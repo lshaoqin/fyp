@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
   const response = await fetch(`${backendUrl}/user-files`, {
     method: "GET",
     headers: {
-      Authorization: `Bearer ${authResult.token}`,
+      Authorization: `Bearer ${authResult!.token}`,
     },
   });
 
@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${authResult.token}`,
+      Authorization: `Bearer ${authResult!.token}`,
     },
     body: JSON.stringify(body),
   });

@@ -9,6 +9,7 @@ export async function GET(
 ) {
   const authResult = await requireFirebaseAuth(req);
   if (authResult instanceof NextResponse) return authResult;
+  if (!authResult) return new NextResponse("Unauthorized", { status: 401 });
 
   const { documentId } = await context.params;
   const backendUrl = process.env.PYTHON_BACKEND_URL || "http://localhost:8080";
@@ -16,7 +17,7 @@ export async function GET(
   const response = await fetch(`${backendUrl}/user-files/${documentId}/preview`, {
     method: "GET",
     headers: {
-      Authorization: `Bearer ${authResult.token}`,
+      Authorization: `Bearer ${authResult!.token}`,
     },
   });
 

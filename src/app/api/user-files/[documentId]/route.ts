@@ -16,7 +16,7 @@ export async function GET(
   const response = await fetch(`${backendUrl}/user-files/${documentId}`, {
     method: "GET",
     headers: {
-      Authorization: `Bearer ${authResult.token}`,
+      Authorization: `Bearer ${authResult!.token}`,
     },
   });
 
@@ -37,7 +37,7 @@ export async function DELETE(
   const response = await fetch(`${backendUrl}/user-files/${documentId}`, {
     method: "DELETE",
     headers: {
-      Authorization: `Bearer ${authResult.token}`,
+      Authorization: `Bearer ${authResult!.token}`,
     },
   });
 
