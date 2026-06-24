@@ -114,6 +114,11 @@ export const WordDefinitionPopover: React.FC<WordDefinitionPopoverProps> = ({
     return lettersOnly || value.trim().toLowerCase();
   };
 
+  const hideWordInText = (text: string, word: string): string => {
+    const regex = new RegExp(word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi");
+    return text.replace(regex, (match) => "_".repeat(match.length));
+  };
+
   const parseTtsAudio = async (
     response: Response
   ): Promise<{ audio: string; audioMimeType: string; timestamps: TtsWordTimestamp[] }> => {
@@ -380,7 +385,7 @@ export const WordDefinitionPopover: React.FC<WordDefinitionPopoverProps> = ({
                       lineHeight: textSettings.lineSpacing,
                     }}
                   >
-                    {data.definition}
+                    {showPractice && practiceStep === "write" ? hideWordInText(data.definition, data.word) : data.definition}
                   </p>
                   {data.example_sentence && practiceStep !== "write" && (
                     <p className="text-sm text-indigo-700 dark:text-indigo-300 italic">
