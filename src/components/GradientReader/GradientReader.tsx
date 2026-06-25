@@ -212,8 +212,6 @@ export const GradientReader: React.FC<GradientReaderProps> = ({
           const isSuccess = Boolean(successWordIndexes?.has(idx));
           const isReveal = Boolean(revealWordIndexes?.has(idx)) && !isSuccess;
           const isHint = Boolean(hintWordIndexes?.has(idx)) && !isSuccess && !isReveal;
-          const isHintStart = isHint && !hintWordIndexes?.has(idx - 1);
-          const isHintEnd = isHint && !hintWordIndexes?.has(idx + 1);
 
           return (
             <span
@@ -221,6 +219,7 @@ export const GradientReader: React.FC<GradientReaderProps> = ({
               ref={(el) => {
                 wordRefsRef.current[idx] = el;
               }}
+              data-hint={isHint ? "true" : undefined}
               style={{
                 color: word.color,
                 fontWeight: word.isBold ? "bold" : "normal",
@@ -229,16 +228,9 @@ export const GradientReader: React.FC<GradientReaderProps> = ({
                   : isReveal
                     ? "#fde68a"
                     : isHint
-                      ? "#dbeafe"
+                      ? "#bfdbfe"
                       : undefined,
-                borderTop: isHint ? "1px solid #93c5fd" : undefined,
-                borderBottom: isHint ? "1px solid #93c5fd" : undefined,
-                borderLeft: isHintStart ? "1px solid #93c5fd" : undefined,
-                borderRight: isHintEnd ? "1px solid #93c5fd" : undefined,
-                borderTopLeftRadius: isHintStart ? "0.2rem" : undefined,
-                borderBottomLeftRadius: isHintStart ? "0.2rem" : undefined,
-                borderTopRightRadius: isHintEnd ? "0.2rem" : undefined,
-                borderBottomRightRadius: isHintEnd ? "0.2rem" : undefined,
+                borderRadius: isHint ? "0.2rem" : undefined,
               }}
               className={[
                 !word.isWhitespace && onWordClick ? "cursor-pointer hover:underline" : "",

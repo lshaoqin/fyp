@@ -82,6 +82,7 @@ export const TextView: React.FC<TextViewProps> = ({
   const [isPhonemeAudioPlaying, setIsPhonemeAudioPlaying] = useState(false);
   const [wordHuntWordAudioCache, setWordHuntWordAudioCache] = useState<Record<string, WordHuntWordAudio>>({});
   const wordHuntAudioRef = React.useRef<HTMLAudioElement | null>(null);
+  const textContentRef = React.useRef<HTMLDivElement | null>(null);
   const vocabularyExcludedWordsRef = React.useRef<Set<string>>(new Set());
 
   useEffect(() => {
@@ -148,9 +149,7 @@ export const TextView: React.FC<TextViewProps> = ({
   const getWordHuntHighlightStyle = useCallback((
     isSuccess: boolean,
     isReveal: boolean,
-    isHint: boolean,
-    isHintStart = false,
-    isHintEnd = false
+    isHint: boolean
   ): CSSProperties | undefined => {
     if (isSuccess) {
       return {
@@ -170,15 +169,8 @@ export const TextView: React.FC<TextViewProps> = ({
 
     if (isHint) {
       return {
-        backgroundColor: "#dbeafe",
-        borderTop: "1px solid #93c5fd",
-        borderBottom: "1px solid #93c5fd",
-        borderLeft: isHintStart ? "1px solid #93c5fd" : "none",
-        borderRight: isHintEnd ? "1px solid #93c5fd" : "none",
-        borderTopLeftRadius: isHintStart ? "0.2rem" : 0,
-        borderBottomLeftRadius: isHintStart ? "0.2rem" : 0,
-        borderTopRightRadius: isHintEnd ? "0.2rem" : 0,
-        borderBottomRightRadius: isHintEnd ? "0.2rem" : 0,
+        backgroundColor: "#bfdbfe",
+        borderRadius: "0.2rem",
       };
     }
 
@@ -406,6 +398,21 @@ export const TextView: React.FC<TextViewProps> = ({
       stopWordHuntAudio();
     };
   }, [stopWordHuntAudio]);
+
+  useEffect(() => {
+    if (wordHuntData?.mode === "vocabulary" && wordHuntData.hint_line_indexes?.length) {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          const container = textContentRef.current;
+          if (!container) return;
+          const hintEl = container.querySelector<HTMLElement>('[data-hint="true"]');
+          if (hintEl) {
+            hintEl.scrollIntoView({ behavior: "smooth", block: "center" });
+          }
+        });
+      });
+    }
+  }, [wordHuntData]);
 
   const playWordHuntWordAudioFromPayload = useCallback(async (audioPayload: WordHuntWordAudio) => {
     stopWordHuntAudio();
@@ -831,8 +838,6 @@ export const TextView: React.FC<TextViewProps> = ({
             const isSuccess = foundWordKeys.has(normalizedPart);
             const isReveal = revealedAnswers && correctWordKeySet.has(normalizedPart);
             const isHint = hintIndexes.has(idx);
-            const isHintStart = isHint && !hintIndexes.has(idx - 1);
-            const isHintEnd = isHint && !hintIndexes.has(idx + 1);
             displayCharPos = partEnd;
 
             // If it's just whitespace, return as-is
@@ -840,8 +845,9 @@ export const TextView: React.FC<TextViewProps> = ({
               return (
                 <span
                   key={idx}
+                  data-hint={isHint ? "true" : undefined}
                   className={isHint ? "bg-blue-100 dark:bg-blue-800/60" : undefined}
-                  style={getWordHuntHighlightStyle(false, false, isHint, isHintStart, isHintEnd)}
+                  style={getWordHuntHighlightStyle(false, false, isHint)}
                 >
                   {part}
                 </span>
@@ -862,8 +868,9 @@ export const TextView: React.FC<TextViewProps> = ({
             return (
               <span
                 key={idx}
+                data-hint={isHint ? "true" : undefined}
                 className={classes}
-                style={getWordHuntHighlightStyle(isSuccess, isReveal, isHint, isHintStart, isHintEnd)}
+                style={getWordHuntHighlightStyle(isSuccess, isReveal, isHint)}
                 onClick={() => {
                   if (disableWordTap) return;
                   handleWordTapForDefinition(
@@ -973,8 +980,6 @@ export const TextView: React.FC<TextViewProps> = ({
           const isSuccess = foundWordKeys.has(normalizedPart);
           const isReveal = revealedAnswers && correctWordKeySet.has(normalizedPart);
           const isHint = hintIndexes.has(idx);
-          const isHintStart = isHint && !hintIndexes.has(idx - 1);
-          const isHintEnd = isHint && !hintIndexes.has(idx + 1);
           displayCharPos = partEnd;
 
           // If it's just whitespace, return as-is
@@ -982,8 +987,9 @@ export const TextView: React.FC<TextViewProps> = ({
             return (
               <span
                 key={idx}
+                data-hint={isHint ? "true" : undefined}
                 className={isHint ? "bg-blue-100 dark:bg-blue-800/60" : undefined}
-                style={getWordHuntHighlightStyle(false, false, isHint, isHintStart, isHintEnd)}
+                style={getWordHuntHighlightStyle(false, false, isHint)}
               >
                 {part}
               </span>
@@ -1007,9 +1013,10 @@ export const TextView: React.FC<TextViewProps> = ({
 
           return (
             <span 
-              key={idx} 
+              key={idx}
+              data-hint={isHint ? "true" : undefined}
               className={classes}
-              style={getWordHuntHighlightStyle(isSuccess, isReveal, isHint, isHintStart, isHintEnd)}
+              style={getWordHuntHighlightStyle(isSuccess, isReveal, isHint)}
               onClick={() => {
                 if (disableWordTap) return;
                 if (handleWordTapForWordHunt(part)) {
@@ -1129,39 +1136,55 @@ export const TextView: React.FC<TextViewProps> = ({
       >
         <Header onBackClick={handleTextViewBack} onSettingsClick={onSettingsClick} />
 
-      {/* Text Content */}
-      <div className="flex-1 overflow-auto p-6 sm:p-8 lg:p-12 flex flex-col items-start justify-start">
+      {/* Content area — side-by-side on large screens in word hunt mode */}
+      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden min-h-0">
         {wordHuntData && (
-          <WordHuntView
-            wordHuntData={wordHuntData}
-            selectedMode={currentWordHuntMode}
-            onSelectMode={handleWordHuntModeSwitch}
-            modeSwitchLoading={wordHuntLoading}
-            showWordListToggle={wordHuntData.mode !== "vocabulary"}
-            foundCount={foundWordKeys.size}
-            totalCount={correctWordKeySet.size}
-            isPhonemeAudioPlaying={isPhonemeAudioPlaying}
-            onPlaySound={playWordHuntAudio}
-            shouldShowWordList={shouldShowWordList}
-            onToggleWordList={() => setShowWordList((prev) => !prev)}
-            foundWordKeys={foundWordKeys}
-            revealedAnswers={revealedAnswers}
-            correctWordKeySet={correctWordKeySet}
-            normalizeToken={normalizeToken}
-            feedback={wordHuntFeedback}
-          />
-        )}
-
-        {isFormatting ? (
-          <div className="flex items-center justify-center w-full h-full">
-            <LoadingSpinner
-              label="Formatting text…"
-              size="md"
-              color="blue"
+          <div className="lg:w-80 xl:w-96 lg:flex-shrink-0 lg:overflow-y-auto p-4 lg:border-r border-blue-200 dark:border-blue-700">
+            <WordHuntView
+              wordHuntData={wordHuntData}
+              foundCount={foundWordKeys.size}
+              totalCount={correctWordKeySet.size}
+              isPhonemeAudioPlaying={isPhonemeAudioPlaying}
+              onPlaySound={playWordHuntAudio}
+              shouldShowWordList={shouldShowWordList}
+              onToggleWordList={() => setShowWordList((prev) => !prev)}
+              foundWordKeys={foundWordKeys}
+              revealedAnswers={revealedAnswers}
+              correctWordKeySet={correctWordKeySet}
+              normalizeToken={normalizeToken}
+              feedback={wordHuntFeedback}
             />
           </div>
-        ) : isParagraphMode ? (
-          <div className="w-full h-full flex flex-col">
+        )}
+
+        <div className="flex-1 overflow-auto p-6 sm:p-8 lg:p-12 flex flex-col items-start justify-start" ref={textContentRef}>
+          {isFormatting ? (
+            <div className="flex items-center justify-center w-full h-full">
+              <LoadingSpinner
+                label="Formatting text…"
+                size="md"
+                color="blue"
+              />
+            </div>
+          ) : isParagraphMode ? (
+            <div className="w-full h-full flex flex-col">
+              <TextViewBox
+                style={{
+                  fontFamily: settings.fontFamily,
+                  fontSize: `${settings.fontSize}px`,
+                  color: settings.fontColor === "gradient" ? "#1a1a1a" : settings.fontColor,
+                  lineHeight: settings.lineSpacing,
+                  backgroundColor: settings.backgroundColor,
+                }}
+                className="text-base sm:text-lg lg:text-xl leading-relaxed flex-1 overflow-auto"
+              >
+                {parseTextWithHighlight(currentParagraph)}
+              </TextViewBox>
+              <div className="mt-6 text-sm font-medium" style={{ color: settings.fontColor === "gradient" ? "#1a1a1a" : settings.fontColor }}>
+                Paragraph {currentParagraphIndex + 1} of {paragraphs.length}
+              </div>
+            </div>
+          ) : (
             <TextViewBox
               style={{
                 fontFamily: settings.fontFamily,
@@ -1170,32 +1193,49 @@ export const TextView: React.FC<TextViewProps> = ({
                 lineHeight: settings.lineSpacing,
                 backgroundColor: settings.backgroundColor,
               }}
-              className="text-base sm:text-lg lg:text-xl leading-relaxed flex-1 overflow-auto"
+              className="text-base sm:text-lg lg:text-xl leading-relaxed overflow-auto"
             >
-              {parseTextWithHighlight(currentParagraph)}
+              {parseTextWithHighlight(displayText)}
             </TextViewBox>
-            <div className="mt-6 text-sm font-medium" style={{ color: settings.fontColor === "gradient" ? "#1a1a1a" : settings.fontColor }}>
-              Paragraph {currentParagraphIndex + 1} of {paragraphs.length}
-            </div>
-          </div>
-        ) : (
-          <TextViewBox
-            style={{
-              fontFamily: settings.fontFamily,
-              fontSize: `${settings.fontSize}px`,
-              color: settings.fontColor === "gradient" ? "#1a1a1a" : settings.fontColor,
-              lineHeight: settings.lineSpacing,
-              backgroundColor: settings.backgroundColor,
-            }}
-            className="text-base sm:text-lg lg:text-xl leading-relaxed overflow-auto"
-          >
-            {parseTextWithHighlight(displayText)}
-          </TextViewBox>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Footer Actions */}
-      <div className="flex gap-4 p-6 bg-white dark:bg-slate-900 border-t-4 border-yellow-500 flex-wrap justify-center">
+      <div className="flex gap-4 p-6 bg-white dark:bg-slate-900 border-t-4 border-yellow-500 flex-wrap justify-center items-center">
+        {isWordHuntMode && (
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">Mode:</span>
+            <button
+              type="button"
+              onClick={() => handleWordHuntModeSwitch("pattern")}
+              disabled={wordHuntLoading}
+              aria-pressed={currentWordHuntMode === "pattern"}
+              className={[
+                "px-3 py-1 rounded-md text-sm font-semibold border transition-colors disabled:opacity-60",
+                currentWordHuntMode === "pattern"
+                  ? "bg-blue-600 text-white border-blue-600 ring-2 ring-blue-300 dark:ring-blue-500 shadow-sm"
+                  : "bg-white text-slate-700 border-slate-300 hover:bg-slate-100 dark:bg-slate-700 dark:text-slate-100 dark:border-slate-500 dark:hover:bg-slate-600",
+              ].join(" ")}
+            >
+              Phonetics
+            </button>
+            <button
+              type="button"
+              onClick={() => handleWordHuntModeSwitch("vocabulary")}
+              disabled={wordHuntLoading}
+              aria-pressed={currentWordHuntMode === "vocabulary"}
+              className={[
+                "px-3 py-1 rounded-md text-sm font-semibold border transition-colors disabled:opacity-60",
+                currentWordHuntMode === "vocabulary"
+                  ? "bg-blue-600 text-white border-blue-600 ring-2 ring-blue-300 dark:ring-blue-500 shadow-sm"
+                  : "bg-white text-slate-700 border-slate-300 hover:bg-slate-100 dark:bg-slate-700 dark:text-slate-100 dark:border-slate-500 dark:hover:bg-slate-600",
+              ].join(" ")}
+            >
+              Vocabulary
+            </button>
+          </div>
+        )}
         {isWordHuntMode ? (
           <WordHuntActions
             revealLabel={currentWordHuntMode === "vocabulary" ? "singular" : "plural"}

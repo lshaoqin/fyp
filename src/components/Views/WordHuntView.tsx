@@ -55,10 +55,6 @@ export function getQuestionAwareTipMessage(question: string): string {
 
 interface WordHuntViewProps {
   wordHuntData: WordHuntData;
-  selectedMode: "pattern" | "vocabulary";
-  onSelectMode: (mode: "pattern" | "vocabulary") => void;
-  modeSwitchLoading?: boolean;
-  showWordListToggle?: boolean;
   foundCount: number;
   totalCount: number;
   isPhonemeAudioPlaying: boolean;
@@ -74,10 +70,6 @@ interface WordHuntViewProps {
 
 export const WordHuntView: React.FC<WordHuntViewProps> = ({
   wordHuntData,
-  selectedMode,
-  onSelectMode,
-  modeSwitchLoading = false,
-  showWordListToggle = true,
   foundCount,
   totalCount,
   isPhonemeAudioPlaying,
@@ -93,40 +85,11 @@ export const WordHuntView: React.FC<WordHuntViewProps> = ({
   const displayQuestion = wordHuntData.question.replace(/^Find words/i, "Tap words");
   const shouldShowFeedback = Boolean(feedback && feedback !== "Tap words in the text to find matches.");
 
+  const showWordListToggle = wordHuntData.mode !== "vocabulary";
+
   return (
-    <div className="w-full mb-4 p-3 sm:p-4 rounded-xl border-2 border-blue-300 dark:border-blue-600 bg-blue-50 dark:bg-slate-800">
-      <div className="mb-3 flex items-center gap-2">
-        <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">Mode:</span>
-        <button
-          type="button"
-          onClick={() => onSelectMode("pattern")}
-          disabled={modeSwitchLoading}
-          aria-pressed={selectedMode === "pattern"}
-          className={[
-            "px-3 py-1 rounded-md text-sm font-semibold border transition-colors disabled:opacity-60",
-            selectedMode === "pattern"
-              ? "bg-blue-600 text-white border-blue-600 ring-2 ring-blue-300 dark:ring-blue-500 shadow-sm"
-              : "bg-white text-slate-700 border-slate-300 hover:bg-slate-100 dark:bg-slate-700 dark:text-slate-100 dark:border-slate-500 dark:hover:bg-slate-600",
-          ].join(" ")}
-        >
-          Phonetics
-        </button>
-        <button
-          type="button"
-          onClick={() => onSelectMode("vocabulary")}
-          disabled={modeSwitchLoading}
-          aria-pressed={selectedMode === "vocabulary"}
-          className={[
-            "px-3 py-1 rounded-md text-sm font-semibold border transition-colors disabled:opacity-60",
-            selectedMode === "vocabulary"
-              ? "bg-blue-600 text-white border-blue-600 ring-2 ring-blue-300 dark:ring-blue-500 shadow-sm"
-              : "bg-white text-slate-700 border-slate-300 hover:bg-slate-100 dark:bg-slate-700 dark:text-slate-100 dark:border-slate-500 dark:hover:bg-slate-600",
-          ].join(" ")}
-        >
-          Vocabulary
-        </button>
-      </div>
-      <div className="flex items-start justify-between gap-3">
+    <div className="w-full p-3 sm:p-4 rounded-xl border-2 border-blue-300 dark:border-blue-600 bg-blue-50 dark:bg-slate-800">
+      <div className="flex items-start justify-between gap-3 mb-3">
         <p className="text-base sm:text-lg lg:text-xl font-bold text-gray-900 dark:text-white leading-snug pr-2">
           {displayQuestion}
         </p>
