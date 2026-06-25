@@ -1,6 +1,7 @@
 import React, { ReactNode } from "react";
-import { ArrowLeftIcon, GearIcon, PersonIcon } from "@radix-ui/react-icons";
+import { ArrowLeftIcon, EnterFullScreenIcon, ExitFullScreenIcon, GearIcon, PersonIcon } from "@radix-ui/react-icons";
 import { HelpPopover } from "../HelpPopover/HelpPopover";
+import { useFullscreen } from "@/hooks/useFullscreen";
 
 interface HeaderProps {
   onBackClick?: () => void;
@@ -28,6 +29,7 @@ export const Header: React.FC<HeaderProps> = ({
   children,
 }) => {
   const shouldShowBackButton = hideBackButton ? false : showBackButton;
+  const { isFullscreen, toggleFullscreen } = useFullscreen();
   const borderClass = {
     yellow: "border-b-4 border-yellow-500",
     blue: "border-b-4 border-blue-500",
@@ -72,6 +74,13 @@ export const Header: React.FC<HeaderProps> = ({
       {/* Right: Settings & Profile Icons */}
       <div className="flex-1 flex justify-end gap-6 items-center">
         <HelpPopover />
+        <button
+          onClick={toggleFullscreen}
+          className="text-gray-600 dark:text-gray-400 hover:text-yellow-500 transition-colors"
+          aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+        >
+          {isFullscreen ? <ExitFullScreenIcon className="w-7 h-7" /> : <EnterFullScreenIcon className="w-7 h-7" />}
+        </button>
         {showSettings && (
           <button onClick={onSettingsClick} className="text-gray-600 dark:text-gray-400 hover:text-yellow-500 transition-colors">
             <GearIcon className="w-7 h-7" />

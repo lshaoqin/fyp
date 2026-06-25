@@ -7,6 +7,8 @@ import PhoneAuthView from "@/components/Auth/PhoneAuthView";
 import { getFirebaseAuth } from "@/utils/firebase-client";
 import { onIdTokenChanged } from "firebase/auth";
 import type { User } from "firebase/auth";
+import { EnterFullScreenIcon, Cross2Icon } from "@radix-ui/react-icons";
+import { createRoot } from "react-dom/client";
 import {
   listUserDocuments,
   loadUserDocument,
@@ -106,6 +108,7 @@ export default function Page() {
   const [settings, setSettings] = useState<TextSettings>(DEFAULT_SETTINGS);
   const lastHighlightedWordRef = React.useRef<number>(-1);
   const [previousViewMode, setPreviousViewMode] = useState<ViewMode>("upload");
+  const [showFullscreenPrompt, setShowFullscreenPrompt] = useState(false);
   const autosaveInFlightRef = React.useRef(false);
   const autosavePendingRef = React.useRef(false);
   const activeSavedDocumentIdRef = React.useRef<string | null>(null);
@@ -187,6 +190,87 @@ export default function Page() {
   useEffect(() => {
     saveSettingsToCookie(settings);
   }, [settings]);
+
+  useEffect(() => {
+    if (!isAuthenticated || authLoading) return;
+
+    const FULLSCREEN_PROMPT_KEY = "fullscreen_prompt_dismissed";
+    const dismissed = typeof localStorage !== "undefined" && localStorage.getItem(FULLSCREEN_PROMPT_KEY);
+    if (!dismissed && document.fullscreenEnabled) {
+      setShowFullscreenPrompt(true);
+    }
+  }, [isAuthenticated, authLoading]);
+
+  useEffect(() => {
+    if (!showFullscreenPrompt) return;
+
+    const container = document.createElement("div");
+    container.id = "fullscreen-prompt-root";
+    document.body.appendChild(container);
+    const root = createRoot(container);
+
+    const handleEnter = async () => {
+      try {
+        await document.documentElement.requestFullscreen();
+      } catch {
+        // ignore
+      }
+      setShowFullscreenPrompt(false);
+      try { localStorage.setItem("fullscreen_prompt_dismissed", "1"); } catch { /* ignore */ }
+    };
+
+    const handleDismiss = () => {
+      setShowFullscreenPrompt(false);
+      try { localStorage.setItem("fullscreen_prompt_dismissed", "1"); } catch { /* ignore */ }
+    };
+
+    root.render(
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-6">
+        <div className="relative w-full max-w-md rounded-2xl bg-white dark:bg-slate-900 p-8 shadow-2xl border border-blue-200 dark:border-blue-700">
+          <button
+            onClick={handleDismiss}
+            className="absolute top-4 right-4 p-1 rounded hover:bg-gray-100 dark:hover:bg-slate-800 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+            aria-label="Close"
+          >
+            <Cross2Icon className="w-5 h-5" />
+          </button>
+
+          <div className="flex flex-col items-center text-center gap-4">
+            <EnterFullScreenIcon className="w-12 h-12 text-blue-600 dark:text-blue-400" />
+            <div>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                For the best experience
+              </h2>
+              <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+                This app works best in fullscreen mode on phones and tablets.
+                It removes browser toolbars so you can focus on reading.
+              </p>
+            </div>
+
+            <div className="flex gap-3 w-full mt-2">
+              <button
+                onClick={handleDismiss}
+                className="flex-1 px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-semibold hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors"
+              >
+                Not now
+              </button>
+              <button
+                onClick={handleEnter}
+                className="flex-1 px-4 py-3 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-colors"
+              >
+                Go fullscreen
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+
+    return () => {
+      root.unmount();
+      document.body.removeChild(container);
+    };
+  }, [showFullscreenPrompt]);
 
   const isAuthError = React.useCallback((value: unknown) => {
     const message = value instanceof Error ? value.message : String(value || "");
@@ -828,7 +912,6 @@ export default function Page() {
         loadingFileCount={loadingFileCount}
         onMyFilesClick={!firebaseUser || firebaseUser.isAnonymous ? undefined : handleOpenSavedFiles}
         onWriteTextClick={() => {
-          // Set up a minimal result structure to enable EditView
           setResults([{
             blocks: [{ text: "", vertices: [] }],
             full_text: "",
