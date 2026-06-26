@@ -212,6 +212,8 @@ export const GradientReader: React.FC<GradientReaderProps> = ({
           const isSuccess = Boolean(successWordIndexes?.has(idx));
           const isReveal = Boolean(revealWordIndexes?.has(idx)) && !isSuccess;
           const isHint = Boolean(hintWordIndexes?.has(idx)) && !isSuccess && !isReveal;
+          const isHintStart = isHint && !hintWordIndexes?.has(idx - 1);
+          const isHintEnd = isHint && !hintWordIndexes?.has(idx + 1);
 
           return (
             <span
@@ -230,7 +232,10 @@ export const GradientReader: React.FC<GradientReaderProps> = ({
                     : isHint
                       ? "#bfdbfe"
                       : undefined,
-                borderRadius: isHint ? "0.2rem" : undefined,
+                borderTopLeftRadius: isHint && isHintStart ? "0.2rem" : undefined,
+                borderBottomLeftRadius: isHint && isHintStart ? "0.2rem" : undefined,
+                borderTopRightRadius: isHint && isHintEnd ? "0.2rem" : undefined,
+                borderBottomRightRadius: isHint && isHintEnd ? "0.2rem" : undefined,
               }}
               className={[
                 !word.isWhitespace && onWordClick ? "cursor-pointer hover:underline" : "",

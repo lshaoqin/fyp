@@ -149,7 +149,9 @@ export const TextView: React.FC<TextViewProps> = ({
   const getWordHuntHighlightStyle = useCallback((
     isSuccess: boolean,
     isReveal: boolean,
-    isHint: boolean
+    isHint: boolean,
+    isHintStart = false,
+    isHintEnd = false
   ): CSSProperties | undefined => {
     if (isSuccess) {
       return {
@@ -170,7 +172,10 @@ export const TextView: React.FC<TextViewProps> = ({
     if (isHint) {
       return {
         backgroundColor: "#bfdbfe",
-        borderRadius: "0.2rem",
+        borderTopLeftRadius: isHintStart ? "0.2rem" : 0,
+        borderBottomLeftRadius: isHintStart ? "0.2rem" : 0,
+        borderTopRightRadius: isHintEnd ? "0.2rem" : 0,
+        borderBottomRightRadius: isHintEnd ? "0.2rem" : 0,
       };
     }
 
@@ -838,6 +843,8 @@ export const TextView: React.FC<TextViewProps> = ({
             const isSuccess = foundWordKeys.has(normalizedPart);
             const isReveal = revealedAnswers && correctWordKeySet.has(normalizedPart);
             const isHint = hintIndexes.has(idx);
+            const isHintStart = isHint && !hintIndexes.has(idx - 1);
+            const isHintEnd = isHint && !hintIndexes.has(idx + 1);
             displayCharPos = partEnd;
 
             // If it's just whitespace, return as-is
@@ -847,7 +854,7 @@ export const TextView: React.FC<TextViewProps> = ({
                   key={idx}
                   data-hint={isHint ? "true" : undefined}
                   className={isHint ? "bg-blue-100 dark:bg-blue-800/60" : undefined}
-                  style={getWordHuntHighlightStyle(false, false, isHint)}
+                  style={getWordHuntHighlightStyle(false, false, isHint, isHintStart, isHintEnd)}
                 >
                   {part}
                 </span>
@@ -870,7 +877,7 @@ export const TextView: React.FC<TextViewProps> = ({
                 key={idx}
                 data-hint={isHint ? "true" : undefined}
                 className={classes}
-                style={getWordHuntHighlightStyle(isSuccess, isReveal, isHint)}
+                style={getWordHuntHighlightStyle(isSuccess, isReveal, isHint, isHintStart, isHintEnd)}
                 onClick={() => {
                   if (disableWordTap) return;
                   handleWordTapForDefinition(
@@ -980,6 +987,8 @@ export const TextView: React.FC<TextViewProps> = ({
           const isSuccess = foundWordKeys.has(normalizedPart);
           const isReveal = revealedAnswers && correctWordKeySet.has(normalizedPart);
           const isHint = hintIndexes.has(idx);
+          const isHintStart = isHint && !hintIndexes.has(idx - 1);
+          const isHintEnd = isHint && !hintIndexes.has(idx + 1);
           displayCharPos = partEnd;
 
           // If it's just whitespace, return as-is
@@ -989,7 +998,7 @@ export const TextView: React.FC<TextViewProps> = ({
                 key={idx}
                 data-hint={isHint ? "true" : undefined}
                 className={isHint ? "bg-blue-100 dark:bg-blue-800/60" : undefined}
-                style={getWordHuntHighlightStyle(false, false, isHint)}
+                style={getWordHuntHighlightStyle(false, false, isHint, isHintStart, isHintEnd)}
               >
                 {part}
               </span>
@@ -1016,7 +1025,7 @@ export const TextView: React.FC<TextViewProps> = ({
               key={idx}
               data-hint={isHint ? "true" : undefined}
               className={classes}
-              style={getWordHuntHighlightStyle(isSuccess, isReveal, isHint)}
+              style={getWordHuntHighlightStyle(isSuccess, isReveal, isHint, isHintStart, isHintEnd)}
               onClick={() => {
                 if (disableWordTap) return;
                 if (handleWordTapForWordHunt(part)) {
