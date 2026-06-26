@@ -45,7 +45,7 @@ interface WordTimestamp {
 type ViewMode = "upload" | "saved-files" | "image" | "text" | "settings" | "edit";
 
 const DEFAULT_SETTINGS: TextSettings = {
-  fontFamily: "var(--font-geist-sans), sans-serif",
+  fontFamily: "Century Gothic, Verdana, sans-serif",
   fontSize: 20,
   fontColor: "#1a1a1a",
   lineSpacing: 1.5,

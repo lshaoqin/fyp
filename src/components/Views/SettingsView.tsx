@@ -24,11 +24,11 @@ interface FontOption {
 }
 
 const ALL_FONTS: FontOption[] = [
-  { name: "Geist", value: "var(--font-geist-sans), sans-serif", checkFont: "Geist" },
+  { name: "Century Gothic", value: "Century Gothic, Verdana, sans-serif", checkFont: "Century Gothic" },
   { name: "Verdana", value: "Verdana, sans-serif", checkFont: "Verdana" },
   { name: "Arial", value: "Arial, sans-serif", checkFont: "Arial" },
-  { name: "Tahoma", value: "Tahoma, sans-serif", checkFont: "Tahoma" },
-  { name: "Trebuchet MS", value: "Trebuchet MS, sans-serif", checkFont: "Trebuchet MS" },
+  { name: "Comic Sans MS", value: "Comic Sans MS, Comic Sans, cursive", checkFont: "Comic Sans MS" },
+  { name: "Times New Roman", value: "Times New Roman, Times, serif", checkFont: "Times New Roman" },
   { name: "Segoe UI", value: "Segoe UI, sans-serif", checkFont: "Segoe UI" },
 ];
 
@@ -122,7 +122,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
   const handleRestoreDefaults = () => {
     onSettingsChange({
-      fontFamily: "var(--font-geist-sans), sans-serif",
+      fontFamily: "Century Gothic, Verdana, sans-serif",
       fontSize: 20,
       fontColor: "#1a1a1a",
       lineSpacing: 1.5,
