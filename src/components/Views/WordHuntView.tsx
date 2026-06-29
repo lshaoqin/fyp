@@ -110,7 +110,7 @@ export const WordHuntView: React.FC<WordHuntViewProps> = ({
             <button
               onClick={onRevealAnswers}
               disabled={loading}
-              className="px-3 py-1 rounded-lg bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white text-sm font-semibold transition-colors"
+              className="px-3 py-1 rounded-lg bg-indigo-500 hover:bg-indigo-600 disabled:opacity-50 text-white text-sm font-semibold transition-colors"
             >
               Reveal
             </button>
@@ -166,7 +166,7 @@ export const WordHuntView: React.FC<WordHuntViewProps> = ({
                         found
                           ? "bg-emerald-200 text-emerald-900 border-emerald-500 dark:bg-emerald-700 dark:text-emerald-100 dark:border-emerald-300"
                           : revealed
-                            ? "bg-amber-100 text-amber-900 border-amber-500 dark:bg-amber-700 dark:text-amber-100 dark:border-amber-300"
+                            ? "bg-indigo-100 text-indigo-900 border-indigo-400 dark:bg-indigo-700 dark:text-indigo-100 dark:border-indigo-300"
                             : "bg-white text-slate-700 border-slate-300 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-500",
                       ].join(" ")}
                       style={found ? { backgroundColor: "#86efac", borderColor: "#16a34a", color: "#14532d" } : undefined}

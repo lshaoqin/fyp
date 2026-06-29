@@ -228,7 +228,7 @@ export const GradientReader: React.FC<GradientReaderProps> = ({
                 backgroundColor: isSuccess
                   ? "#86efac"
                   : isReveal
-                    ? "#fde68a"
+                    ? "#c7d2fe"
                     : isHint
                       ? "#bfdbfe"
                       : undefined,
@@ -241,10 +241,10 @@ export const GradientReader: React.FC<GradientReaderProps> = ({
                 !word.isWhitespace && onWordClick ? "cursor-pointer hover:underline" : "",
                 idx === highlightedWordIndex ? "bg-yellow-300 dark:bg-yellow-500 rounded-sm" : "",
                 isSuccess
-                  ? "bg-yellow-200/90 dark:bg-yellow-700/70 rounded-sm ring-2 ring-yellow-500 underline decoration-2 decoration-yellow-700 dark:decoration-yellow-200"
+                  ? "bg-green-200/80 dark:bg-green-700/70 rounded-sm ring-2 ring-green-500 underline decoration-2 decoration-green-700 dark:decoration-green-200"
                   : "",
                 isReveal
-                  ? "bg-amber-200 dark:bg-amber-700 rounded-sm ring-1 ring-amber-500"
+                  ? "bg-indigo-200 dark:bg-indigo-700 rounded-sm ring-1 ring-indigo-400"
                   : "",
                 isHint
                   ? "bg-blue-100 dark:bg-blue-800/60"

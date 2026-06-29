@@ -259,7 +259,7 @@ export const ImageView: React.FC<ImageViewProps> = ({
 
   return (
     <div className="flex flex-col h-screen w-screen bg-black">
-      <Header onBackClick={onBackClick} onSettingsClick={onSettingsClick} fontFamily={settings.fontFamily} />
+      <Header onBackClick={onBackClick} onSettingsClick={onSettingsClick} borderColor="blue" fontFamily={settings.fontFamily} />
 
       {/* Image Container */}
       <div className="flex-1 relative bg-black overflow-hidden">
@@ -355,7 +355,7 @@ export const ImageView: React.FC<ImageViewProps> = ({
       </div>
 
       {/* Footer */}
-      <div className="p-6 bg-white dark:bg-slate-900 border-t-4 border-yellow-500">
+      <div className="p-4 bg-white dark:bg-slate-900 border-t border-blue-400 dark:border-blue-700">
         {totalPages > 1 && (
           <div className="flex items-center justify-center gap-4 mb-4">
             <button

@@ -11,7 +11,7 @@ interface HeaderProps {
   showSettings?: boolean;
   showProfile?: boolean;
   title?: string;
-  borderColor?: "yellow" | "blue" | "none";
+  borderColor?: "gray" | "blue" | "green" | "none";
   position?: "top" | "bottom";
   children?: ReactNode;
   fontFamily?: string;
@@ -25,22 +25,23 @@ export const Header: React.FC<HeaderProps> = ({
   showSettings = true,
   showProfile = false,
   title,
-  borderColor = "yellow",
+  borderColor = "gray",
   position = "top",
   children,
   fontFamily = "Verdana, Arial, Helvetica, sans-serif",
 }) => {
   const shouldShowBackButton = hideBackButton ? false : showBackButton;
   const { isFullscreen, toggleFullscreen } = useFullscreen();
-  const borderClass = {
-    yellow: "border-b-4 border-yellow-500",
-    blue: "border-b-4 border-blue-500",
+  const borderClasses = {
+    gray: "border-b border-gray-200 dark:border-gray-700",
+    blue: "border-b border-blue-400 dark:border-blue-700",
+    green: "border-b border-green-400 dark:border-green-700",
     none: "",
   };
 
   return (
     <div
-      className={`flex items-center p-6 bg-white dark:bg-slate-900 ${borderClass[borderColor]}`}
+      className={`flex items-center p-6 bg-white dark:bg-slate-900 ${borderClasses[borderColor]}`}
     >
       {/* Left: Back Button or Spacer */}
       <div className="flex-1">

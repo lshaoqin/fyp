@@ -162,8 +162,8 @@ export const TextView: React.FC<TextViewProps> = ({
 
     if (isReveal) {
       return {
-        backgroundColor: "#fde68a",
-        boxShadow: "inset 0 0 0 1px #d97706",
+        backgroundColor: "#c7d2fe",
+        boxShadow: "inset 0 0 0 1px #6366f1",
         borderRadius: "0.2rem",
       };
     }
@@ -862,8 +862,8 @@ export const TextView: React.FC<TextViewProps> = ({
 
             const classes = [
               shouldBold && "font-semibold",
-              isSuccess && "bg-yellow-200/90 dark:bg-yellow-700/70 ring-2 ring-yellow-500 rounded-sm px-0.5 underline decoration-2 decoration-yellow-700 dark:decoration-yellow-200",
-              isReveal && !isSuccess && "bg-amber-200 dark:bg-amber-700 ring-1 ring-amber-500 rounded-sm px-0.5",
+              isSuccess && "bg-green-200/80 dark:bg-green-700/70 ring-2 ring-green-500 rounded-sm px-0.5 underline decoration-2 decoration-green-700 dark:decoration-green-200",
+              isReveal && !isSuccess && "bg-indigo-200 dark:bg-indigo-700 ring-1 ring-indigo-400 rounded-sm px-0.5",
               isHint && !isSuccess && !isReveal && "bg-blue-100 dark:bg-blue-800/60",
               !disableWordTap && "cursor-pointer hover:underline",
               "transition-all duration-150",
@@ -1007,8 +1007,8 @@ export const TextView: React.FC<TextViewProps> = ({
           const classes = [
             shouldHighlight && "bg-yellow-300 dark:bg-yellow-500",
             shouldBold && "font-semibold",
-            isSuccess && "bg-yellow-200/90 dark:bg-yellow-700/70 ring-2 ring-yellow-500 rounded-sm px-0.5 underline decoration-2 decoration-yellow-700 dark:decoration-yellow-200",
-            isReveal && !isSuccess && "bg-amber-200 dark:bg-amber-700 ring-1 ring-amber-500 rounded-sm px-0.5",
+            isSuccess && "bg-green-200/80 dark:bg-green-700/70 ring-2 ring-green-500 rounded-sm px-0.5 underline decoration-2 decoration-green-700 dark:decoration-green-200",
+            isReveal && !isSuccess && "bg-indigo-200 dark:bg-indigo-700 ring-1 ring-indigo-400 rounded-sm px-0.5",
             isHint && !isSuccess && !isReveal && "bg-blue-100 dark:bg-blue-800/60",
             !disableWordTap && "cursor-pointer hover:opacity-70",
             "transition-all duration-75 ease-in-out",
@@ -1142,7 +1142,7 @@ export const TextView: React.FC<TextViewProps> = ({
         className="flex flex-col h-screen w-screen"
         style={{ backgroundColor: settings.backgroundColor }}
       >
-        <Header onBackClick={handleTextViewBack} onSettingsClick={onSettingsClick} fontFamily={settings.fontFamily} />
+        <Header onBackClick={handleTextViewBack} onSettingsClick={onSettingsClick} borderColor="blue" fontFamily={settings.fontFamily} />
 
       {/* Content area — side-by-side on large screens in word hunt mode */}
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden min-h-0">
@@ -1216,7 +1216,7 @@ export const TextView: React.FC<TextViewProps> = ({
       </div>
 
       {/* Footer Actions */}
-      <div className="flex gap-4 p-6 bg-white dark:bg-slate-900 border-t-4 border-yellow-500 flex-wrap justify-center items-center">
+      <div className="flex gap-3 p-3 bg-white dark:bg-slate-900 border-t border-blue-400 dark:border-blue-700 flex-wrap justify-center items-center">
         {isWordHuntMode ? (
           <div className="flex items-center gap-2">
             <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">Mode:</span>
