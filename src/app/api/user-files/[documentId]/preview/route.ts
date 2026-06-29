@@ -31,7 +31,7 @@ export async function GET(
     status: 200,
     headers: {
       "Content-Type": response.headers.get("content-type") || "image/jpeg",
-      "Cache-Control": "private, max-age=60",
+      "Cache-Control": "private, max-age=3600",
     },
   });
 }

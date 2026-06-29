@@ -188,6 +188,9 @@ export const SavedFilesView: React.FC<SavedFilesViewProps> = ({
                           <img
                             src={item.previewImageUrl}
                             alt="Saved document preview"
+                            loading="lazy"
+                            decoding="async"
+                            sizes="(max-width: 639px) 50vw, (max-width: 1023px) 33vw, (max-width: 1279px) 25vw, 16vw"
                             className={`w-full h-full object-contain transition-opacity duration-200 ${loadedPreviewKeys.has(previewKey) ? "opacity-100" : "opacity-0"}`}
                             onLoad={() => {
                               setLoadedPreviewKeys((prev) => {
