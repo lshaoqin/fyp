@@ -137,12 +137,12 @@ export const EditView: React.FC<EditViewProps> = ({
       className="flex flex-col h-dvh w-screen"
       style={{ backgroundColor: settings.backgroundColor }}
     >
-      <div className="lg:border-b lg:border-green-400 dark:lg:border-green-700 sticky top-0 z-10">
+      <div className="lg:border-b lg:border-blue-400 dark:lg:border-blue-700 sticky top-0 z-10">
         <Header onBackClick={handleBackClick} onSettingsClick={onSettingsClick} borderColor="none" fontFamily={settings.fontFamily} />
       </div>
 
       {/* Formatting toolbar - sticky at top on mobile and tablets */}
-      <div className="sticky top-16 z-10 flex gap-4 p-4 bg-white dark:bg-slate-900 border-b border-green-400 dark:border-green-700 flex-wrap justify-center lg:hidden">
+      <div className="sticky top-16 z-10 flex gap-4 p-4 bg-white dark:bg-slate-900 border-b border-blue-400 dark:border-blue-700 flex-wrap justify-center lg:hidden">
  <Button fontFamily={settings.fontFamily} 
           onClick={handleBold}
           disabled={!selectedRange}
@@ -195,7 +195,7 @@ export const EditView: React.FC<EditViewProps> = ({
 
       {/* Formatting toolbar - at bottom on large desktop screens only */}
       <div 
-        className="hidden lg:flex gap-4 p-4 bg-white dark:bg-slate-900 border-t border-green-400 dark:border-green-700 flex-wrap justify-center transition-all duration-300"
+        className="hidden lg:flex gap-4 p-4 bg-white dark:bg-slate-900 border-t border-blue-400 dark:border-blue-700 flex-wrap justify-center transition-all duration-300"
       >
  <Button fontFamily={settings.fontFamily} 
           onClick={handleBold}
