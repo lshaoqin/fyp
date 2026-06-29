@@ -66,6 +66,11 @@ interface WordHuntViewProps {
   correctWordKeySet: Set<string>;
   normalizeToken: (value: string) => string;
   feedback: string | null;
+  loading?: boolean;
+  isComplete?: boolean;
+  onRevealAnswers?: () => void;
+  onSkipQuestion?: () => void;
+  onNextQuestion?: () => void;
 }
 
 export const WordHuntView: React.FC<WordHuntViewProps> = ({
@@ -81,11 +86,18 @@ export const WordHuntView: React.FC<WordHuntViewProps> = ({
   correctWordKeySet,
   normalizeToken,
   feedback,
+  loading = false,
+  isComplete = false,
+  onRevealAnswers,
+  onSkipQuestion,
+  onNextQuestion,
 }) => {
   const displayQuestion = wordHuntData.question.replace(/^Find words/i, "Tap words");
   const shouldShowFeedback = Boolean(feedback && feedback !== "Tap words in the text to find matches.");
 
   const showWordListToggle = wordHuntData.mode !== "vocabulary";
+
+  const showNextQuestion = isComplete || revealedAnswers;
 
   return (
     <div className="w-full p-3 sm:p-4 rounded-xl border-2 border-blue-300 dark:border-blue-600 bg-blue-50 dark:bg-slate-800">
@@ -93,9 +105,29 @@ export const WordHuntView: React.FC<WordHuntViewProps> = ({
         <p className="text-base sm:text-lg lg:text-xl font-bold text-gray-900 dark:text-white leading-snug pr-2">
           {displayQuestion}
         </p>
-        <span className="shrink-0 px-2 py-1 rounded-full bg-blue-100 text-blue-800 border border-blue-300 text-xs sm:text-sm font-bold dark:bg-blue-900 dark:text-blue-100 dark:border-blue-700">
-          {foundCount}/{totalCount}
-        </span>
+        <div className="flex items-center gap-2 shrink-0">
+          {!showNextQuestion && onRevealAnswers && (
+            <button
+              onClick={onRevealAnswers}
+              disabled={loading}
+              className="px-3 py-1 rounded-lg bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white text-sm font-semibold transition-colors"
+            >
+              Reveal
+            </button>
+          )}
+          {onSkipQuestion && onNextQuestion && (
+            <button
+              onClick={showNextQuestion ? onNextQuestion : onSkipQuestion}
+              disabled={loading}
+              className="px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-semibold transition-colors"
+            >
+              {loading ? "…" : showNextQuestion ? "Next" : "Skip"}
+            </button>
+          )}
+          <span className="px-2 py-1 rounded-full bg-blue-100 text-blue-800 border border-blue-300 text-xs sm:text-sm font-bold dark:bg-blue-900 dark:text-blue-100 dark:border-blue-700">
+            {foundCount}/{totalCount}
+          </span>
+        </div>
       </div>
 
       {wordHuntData.phoneme_audio?.audio && (

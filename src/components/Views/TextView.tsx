@@ -9,7 +9,6 @@ import {
 import { Button, Header, TextViewBox, LoadingSpinner, WordDefinitionPopover, GradientReader } from "@/components";
 import ListenView from "./ListenView";
 import { buildWordHuntQuestionPool } from "@/components/WordHunt/questionPool";
-import WordHuntActions from "@/components/WordHunt/WordHuntActions";
 import type { WordHuntData } from "@/components/WordHunt/types";
 import type { TextSettings } from "./SettingsView";
 import { getQuestionAwareTipMessage, getTapSuccessMessage, WordHuntView } from "./WordHuntView";
@@ -1162,6 +1161,11 @@ export const TextView: React.FC<TextViewProps> = ({
               correctWordKeySet={correctWordKeySet}
               normalizeToken={normalizeToken}
               feedback={wordHuntFeedback}
+              loading={wordHuntLoading}
+              isComplete={isWordHuntComplete}
+              onRevealAnswers={revealAnswers}
+              onSkipQuestion={skipQuestion}
+              onNextQuestion={nextQuestion}
             />
           </div>
         )}
@@ -1212,7 +1216,7 @@ export const TextView: React.FC<TextViewProps> = ({
 
       {/* Footer Actions */}
       <div className="flex gap-4 p-6 bg-white dark:bg-slate-900 border-t-4 border-yellow-500 flex-wrap justify-center items-center">
-        {isWordHuntMode && (
+        {isWordHuntMode ? (
           <div className="flex items-center gap-2">
             <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">Mode:</span>
             <button
@@ -1244,19 +1248,6 @@ export const TextView: React.FC<TextViewProps> = ({
               Vocabulary
             </button>
           </div>
-        )}
-        {isWordHuntMode ? (
-          <WordHuntActions
-            revealLabel={currentWordHuntMode === "vocabulary" ? "singular" : "plural"}
-            isComplete={isWordHuntComplete}
-            hasRevealedAnswers={revealedAnswers}
-            loading={wordHuntLoading}
-            isFormatting={isFormatting}
-            hasData={Boolean(wordHuntData)}
-            onRevealAnswers={revealAnswers}
-            onSkipQuestion={skipQuestion}
-            onNextQuestion={nextQuestion}
-          />
         ) : showMediaPlayer && !isFormatting ? (
           <ListenView
             isLoadingAudio={isLoadingAudio}
