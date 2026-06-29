@@ -913,12 +913,12 @@ export default function Page() {
         }
       }
 
-      if (currentWordIdx !== lastHighlightedWordRef.current) {
+      if (currentWordIdx !== -1 && currentWordIdx !== lastHighlightedWordRef.current) {
         lastHighlightedWordRef.current = currentWordIdx;
         setCurrentPlaybackTime(time);
       }
 
-      lastIdx = currentWordIdx;
+      lastIdx = currentWordIdx !== -1 ? currentWordIdx : lastIdx;
       rafId = requestAnimationFrame(loop);
     };
 
