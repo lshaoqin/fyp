@@ -24,10 +24,10 @@ interface FontOption {
 }
 
 const ALL_FONTS: FontOption[] = [
-  { name: "Century Gothic", value: "Century Gothic, Verdana, sans-serif", checkFont: "Century Gothic" },
+  { name: "Poppins", value: "var(--font-poppins), sans-serif", checkFont: "Poppins" },
   { name: "Verdana", value: "Verdana, sans-serif", checkFont: "Verdana" },
   { name: "Arial", value: "Arial, sans-serif", checkFont: "Arial" },
-  { name: "Comic Sans MS", value: "Comic Sans MS, Comic Sans, cursive", checkFont: "Comic Sans MS" },
+  { name: "Comic Neue", value: "var(--font-comic-neue), Comic Sans MS, cursive", checkFont: "Comic Neue" },
   { name: "Times New Roman", value: "Times New Roman, Times, serif", checkFont: "Times New Roman" },
   { name: "Segoe UI", value: "Segoe UI, sans-serif", checkFont: "Segoe UI" },
 ];
@@ -122,7 +122,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
   const handleRestoreDefaults = () => {
     onSettingsChange({
-      fontFamily: "Century Gothic, Verdana, sans-serif",
+      fontFamily: "var(--font-poppins), sans-serif",
       fontSize: 20,
       fontColor: "#1a1a1a",
       lineSpacing: 1.5,

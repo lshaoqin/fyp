@@ -38,7 +38,7 @@ export const UploadView: React.FC<UploadViewProps> = ({
   authSection,
 }) => {
   const getFontFamily = () => {
-    if (!settings) return "var(--font-geist-sans), sans-serif";
+    if (!settings) return "var(--font-poppins), sans-serif";
     return settings.fontFamily;
   };
 
