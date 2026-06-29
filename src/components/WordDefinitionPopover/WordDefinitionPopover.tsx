@@ -3,6 +3,11 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { SpeakerLoudIcon, Cross2Icon } from "@radix-ui/react-icons";
 
+const definitionCache = new Map<string, WordDefinitionData>();
+
+const normalizeWordForCache = (word: string): string =>
+  word.replace(/^[^\w]+|[^\w]+$/g, "").toLowerCase();
+
 interface AudioReading {
   audio: string;
   sample_rate: number;
@@ -232,6 +237,14 @@ export const WordDefinitionPopover: React.FC<WordDefinitionPopoverProps> = ({
   const loadDefinition = useCallback(async () => {
     if (!isOpen || !word) return;
 
+    const cacheKey = `${normalizeWordForCache(word)}|${contextSentence || ""}`;
+    const cached = definitionCache.get(cacheKey);
+    if (cached) {
+      const cachedData = cached;
+      setData(cachedData);
+      return;
+    }
+
     setLoading(true);
     setError(null);
     try {
@@ -256,6 +269,7 @@ export const WordDefinitionPopover: React.FC<WordDefinitionPopoverProps> = ({
       }
 
       const result = await response.json();
+      definitionCache.set(cacheKey, result);
       setData(result);
     } catch {
       setError("There was a problem fetching the meaning of this word.");
