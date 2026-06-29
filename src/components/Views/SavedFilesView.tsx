@@ -282,7 +282,7 @@ export const SavedFilesView: React.FC<SavedFilesViewProps> = ({
                   }}
                   className={`relative w-full max-w-[220px] mx-auto text-left border rounded-xl overflow-hidden transition-colors cursor-pointer select-none ${
                     openingDocumentId
-                      ? "opacity-80 cursor-not-allowed"
+                      ? "opacity-80 cursor-not-allowed border-blue-200 dark:border-blue-800"
                       : isSelectionMode
                         ? selectedFileIds.has(item.id)
                           ? "border-blue-500 bg-blue-50 dark:bg-blue-950"
