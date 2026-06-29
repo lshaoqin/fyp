@@ -870,6 +870,66 @@ export default function Page() {
     }
   };
 
+  const isPlayingRef = React.useRef(false);
+  React.useEffect(() => {
+    isPlayingRef.current = isPlayingAudio;
+  }, [isPlayingAudio]);
+
+  const wordTimestampsRef = React.useRef(wordTimestamps);
+  wordTimestampsRef.current = wordTimestamps;
+
+  React.useEffect(() => {
+    if (!isPlayingAudio) return;
+
+    let rafId: number;
+    let lastIdx = -1;
+
+    const loop = () => {
+      if (!isPlayingRef.current || !audioRef.current) return;
+
+      const time = audioRef.current.currentTime;
+      const timestamps = wordTimestampsRef.current;
+      const len = timestamps.length;
+
+      let currentWordIdx = -1;
+      if (len > 0) {
+        const last = lastIdx === -1 ? 0 : lastIdx;
+        if (time >= timestamps[last]?.start) {
+          for (let i = last; i < len; i++) {
+            if (time >= timestamps[i].start && time < timestamps[i].end) {
+              currentWordIdx = i;
+              break;
+            }
+            if (i < len - 1 && time < timestamps[i + 1].start) break;
+          }
+        }
+        if (currentWordIdx === -1) {
+          for (let i = 0; i < len; i++) {
+            if (time >= timestamps[i].start && time < timestamps[i].end) {
+              currentWordIdx = i;
+              break;
+            }
+          }
+        }
+      }
+
+      if (currentWordIdx !== lastHighlightedWordRef.current) {
+        lastHighlightedWordRef.current = currentWordIdx;
+        setCurrentPlaybackTime(time);
+      }
+
+      lastIdx = currentWordIdx;
+      rafId = requestAnimationFrame(loop);
+    };
+
+    lastHighlightedWordRef.current = -1;
+    rafId = requestAnimationFrame(loop);
+
+    return () => {
+      cancelAnimationFrame(rafId);
+    };
+  }, [isPlayingAudio]);
+
   const handleStopAudio = () => {
     if (audioRef.current) {
       audioRef.current.pause();
@@ -1115,17 +1175,6 @@ export default function Page() {
         <audio 
           ref={audioRef} 
           onEnded={() => setIsPlayingAudio(false)}
-          onTimeUpdate={(e) => {
-            const time = e.currentTarget.currentTime;
-            // Only update if the highlighted word has changed
-            const currentWordIdx = wordTimestamps.findIndex(
-              (ts) => time >= ts.start && time < ts.end
-            );
-            if (currentWordIdx !== lastHighlightedWordRef.current) {
-              lastHighlightedWordRef.current = currentWordIdx;
-              setCurrentPlaybackTime(time);
-            }
-          }}
         />
       </div>
     );
