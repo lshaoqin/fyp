@@ -81,6 +81,8 @@ export const MediaPlayer: React.FC<MediaPlayerProps> = ({
 
   const accentColor = "#3b82f6";
 
+  const progressPercent = duration > 0 ? (sliderValue / duration) * 100 : 0;
+
   return (
     <div className="flex flex-col gap-4 w-full max-w-md">
       {/* Progress Bar */}
@@ -102,13 +104,19 @@ export const MediaPlayer: React.FC<MediaPlayerProps> = ({
           onPointerCancel={() => { isDraggingRef.current = false; }}
           onTouchStart={() => { isDraggingRef.current = true; }}
           onTouchEnd={() => { isDraggingRef.current = false; }}
-          style={{ accentColor }}
+          style={{
+            accentColor,
+            "--progress": `${progressPercent}%`,
+          } as React.CSSProperties}
           className="w-full h-10 appearance-none bg-transparent cursor-pointer touch-none
-            [&::-webkit-slider-runnable-track]:h-2 [&::-webkit-slider-runnable-track]:rounded-full [&::-webkit-slider-runnable-track]:bg-gray-200
+            [&::-webkit-slider-runnable-track]:h-2 [&::-webkit-slider-runnable-track]:rounded-full [&::-webkit-slider-runnable-track]:[background:linear-gradient(to_right,#3b82f6_var(--progress),#e5e7eb_var(--progress))]
             [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-6 [&::-webkit-slider-thumb]:h-6 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-blue-500 [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:shadow-blue-500/30 [&::-webkit-slider-thumb]:mt-[-8px] [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:active:scale-110 [&::-webkit-slider-thumb]:transition-transform
-            [&::-moz-range-track]:h-2 [&::-moz-range-track]:rounded-full [&::-moz-range-track]:bg-gray-200
+            [&::-moz-range-track]:h-2 [&::-moz-range-track]:rounded-full [&::-moz-range-track]:bg-transparent
+            [&::-moz-range-progress]:h-2 [&::-moz-range-progress]:rounded-full [&::-moz-range-progress]:bg-blue-500
             [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:w-6 [&::-moz-range-thumb]:h-6 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-blue-500 [&::-moz-range-thumb]:border-none [&::-moz-range-thumb]:shadow-md [&::-moz-range-thumb]:cursor-pointer [&::-moz-range-thumb]:active:scale-110 [&::-moz-range-thumb]:transition-transform
-            dark:[&::-webkit-slider-runnable-track]:bg-slate-700 dark:[&::-moz-range-track]:bg-slate-700"
+            dark:[&::-webkit-slider-runnable-track]:[background:linear-gradient(to_right,#3b82f6_var(--progress),#334155_var(--progress))]
+            dark:[&::-moz-range-progress]:bg-blue-400
+            dark:[&::-webkit-slider-thumb]:bg-blue-400 dark:[&::-moz-range-thumb]:bg-blue-400"
         />
         <span className="text-xs font-medium text-slate-600 dark:text-slate-400 min-w-10 text-right tabular-nums">
           {formatTime(duration)}
