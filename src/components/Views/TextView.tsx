@@ -1142,7 +1142,7 @@ export const TextView: React.FC<TextViewProps> = ({
         className="flex flex-col h-screen w-screen"
         style={{ backgroundColor: settings.backgroundColor }}
       >
-        <Header onBackClick={handleTextViewBack} onSettingsClick={onSettingsClick} />
+        <Header onBackClick={handleTextViewBack} onSettingsClick={onSettingsClick} fontFamily={settings.fontFamily} />
 
       {/* Content area — side-by-side on large screens in word hunt mode */}
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden min-h-0">
@@ -1177,6 +1177,7 @@ export const TextView: React.FC<TextViewProps> = ({
                 label="Formatting text…"
                 size="md"
                 color="blue"
+                fontFamily={settings.fontFamily}
               />
             </div>
           ) : isParagraphMode ? (
@@ -1260,7 +1261,7 @@ export const TextView: React.FC<TextViewProps> = ({
           />
         ) : isParagraphMode ? (
           <>
-            <Button 
+            <Button fontFamily={settings.fontFamily} 
               onClick={() => {
                 setIsParagraphMode(false);
                 setCurrentParagraphIndex(0);
@@ -1284,7 +1285,7 @@ export const TextView: React.FC<TextViewProps> = ({
           </>
         ) : (
           <>
-            <Button 
+            <Button fontFamily={settings.fontFamily} 
               onClick={() => {
                 setIsParagraphMode(true);
                 setCurrentParagraphIndex(0);
@@ -1307,13 +1308,13 @@ export const TextView: React.FC<TextViewProps> = ({
             >
               {wordHuntLoading ? "Preparing..." : "Word hunt"}
             </Button>
-            <Button 
+            <Button fontFamily={settings.fontFamily} 
               onClick={onEditClick}
               icon={<Pencil2Icon className="w-6 h-6" />}
             >
               Edit
             </Button>
-            {/* <Button icon={<BookmarkIcon className="w-6 h-6" />}>
+            {/* <Button fontFamily={settings.fontFamily} icon={<BookmarkIcon className="w-6 h-6" />}>
               Notes
             </Button> */}
           </>

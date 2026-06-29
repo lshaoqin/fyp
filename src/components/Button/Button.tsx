@@ -9,6 +9,7 @@ interface ButtonProps {
   type?: "button" | "submit" | "reset";
   variant?: "primary" | "secondary" | "danger";
   size?: "sm" | "md" | "lg";
+  fontFamily?: string;
 }
 
 export const Button: React.FC<ButtonProps> = ({
@@ -20,6 +21,7 @@ export const Button: React.FC<ButtonProps> = ({
   type = "button",
   variant = "primary",
   size = "md",
+  fontFamily = "Verdana, Arial, Helvetica, sans-serif",
 }) => {
   const baseStyles =
     "flex items-center gap-3 font-bold rounded-lg transition-colors font-bold";
@@ -45,7 +47,7 @@ export const Button: React.FC<ButtonProps> = ({
       onClick={onClick}
       disabled={disabled}
       className={`${baseStyles} ${sizeStyles[size]} ${variantStyles[variant]} ${className}`}
-      style={{ fontFamily: "Verdana, Arial, Helvetica, sans-serif" }}
+      style={{ fontFamily }}
     >
       {icon && <span>{icon}</span>}
       {children}

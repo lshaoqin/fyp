@@ -14,6 +14,7 @@ interface HeaderProps {
   borderColor?: "yellow" | "blue" | "none";
   position?: "top" | "bottom";
   children?: ReactNode;
+  fontFamily?: string;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -27,6 +28,7 @@ export const Header: React.FC<HeaderProps> = ({
   borderColor = "yellow",
   position = "top",
   children,
+  fontFamily = "Verdana, Arial, Helvetica, sans-serif",
 }) => {
   const shouldShowBackButton = hideBackButton ? false : showBackButton;
   const { isFullscreen, toggleFullscreen } = useFullscreen();
@@ -50,7 +52,7 @@ export const Header: React.FC<HeaderProps> = ({
             <ArrowLeftIcon className="w-7 h-7" />
             <span
               className="text-lg font-bold"
-              style={{ fontFamily: "Verdana, Arial, Helvetica, sans-serif" }}
+              style={{ fontFamily }}
             >
               Back
             </span>
@@ -62,7 +64,7 @@ export const Header: React.FC<HeaderProps> = ({
       {title && (
         <h2
           className="text-2xl font-bold text-gray-800 dark:text-gray-200 flex-1 text-center"
-          style={{ fontFamily: "Verdana, Arial, Helvetica, sans-serif" }}
+          style={{ fontFamily }}
         >
           {title}
         </h2>

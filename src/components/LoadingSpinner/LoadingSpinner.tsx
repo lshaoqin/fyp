@@ -4,12 +4,14 @@ interface LoadingSpinnerProps {
   label?: string;
   size?: "sm" | "md" | "lg";
   color?: "blue" | "yellow" | "white";
+  fontFamily?: string;
 }
 
 export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
   label = "Loading...",
   size = "md",
   color = "blue",
+  fontFamily = "Verdana, Arial, Helvetica, sans-serif",
 }) => {
   const sizeStyles = {
     sm: "w-8 h-8 border-2",
@@ -37,7 +39,7 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
             className={`text-white font-semibold ${
               size === "lg" ? "text-xl" : size === "sm" ? "text-sm" : "text-base"
             }`}
-            style={{ fontFamily: "Verdana, Arial, Helvetica, sans-serif" }}
+            style={{ fontFamily }}
           >
             {label}
           </p>

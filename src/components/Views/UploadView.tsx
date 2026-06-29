@@ -198,6 +198,7 @@ export const UploadView: React.FC<UploadViewProps> = ({
                 : "Extracting and formatting text…"}
               size="lg"
               color="white"
+              fontFamily={settings?.fontFamily}
             />
             {onCancelLoading && (
               <button

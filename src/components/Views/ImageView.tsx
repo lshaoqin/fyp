@@ -259,7 +259,7 @@ export const ImageView: React.FC<ImageViewProps> = ({
 
   return (
     <div className="flex flex-col h-screen w-screen bg-black">
-      <Header onBackClick={onBackClick} onSettingsClick={onSettingsClick} />
+      <Header onBackClick={onBackClick} onSettingsClick={onSettingsClick} fontFamily={settings.fontFamily} />
 
       {/* Image Container */}
       <div className="flex-1 relative bg-black overflow-hidden">
@@ -338,6 +338,7 @@ export const ImageView: React.FC<ImageViewProps> = ({
                 label="Formatting text…"
                 size="lg"
                 color="white"
+                fontFamily={settings.fontFamily}
               />
               {onCancelFormatting && (
                 <button
@@ -378,7 +379,7 @@ export const ImageView: React.FC<ImageViewProps> = ({
         )}
         <p
           className="text-base text-gray-600 dark:text-gray-400 text-center font-semibold"
-          style={{ fontFamily: "Verdana, Arial, Helvetica, sans-serif" }}
+          style={{ fontFamily: settings.fontFamily }}
         >
           <span>Click on a text box to view its content or </span>
           {onUseFullText && (

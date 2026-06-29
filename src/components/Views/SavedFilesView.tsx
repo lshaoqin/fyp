@@ -52,7 +52,7 @@ export const SavedFilesView: React.FC<SavedFilesViewProps> = ({
 
   return (
     <div className="flex flex-col h-screen w-screen bg-white dark:bg-slate-950">
-      <Header onBackClick={onBackClick} onSettingsClick={onSettingsClick} />
+      <Header onBackClick={onBackClick} onSettingsClick={onSettingsClick} fontFamily={settings.fontFamily} />
 
       {/* Delete confirmation modal */}
       {confirmDeleteId && (
@@ -181,7 +181,7 @@ export const SavedFilesView: React.FC<SavedFilesViewProps> = ({
                         <>
                           {!loadedPreviewKeys.has(previewKey) && (
                             <div className="absolute inset-0 flex items-center justify-center">
-                              <LoadingSpinner label="" size="sm" color="blue" />
+                              <LoadingSpinner label="" size="sm" color="blue" fontFamily={settings.fontFamily} />
                             </div>
                           )}
                           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -254,7 +254,7 @@ export const SavedFilesView: React.FC<SavedFilesViewProps> = ({
                   </div>
                   {openingDocumentId === item.id && (
                     <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/85 dark:bg-slate-900/85">
-                      <LoadingSpinner label="Opening..." size="sm" color="blue" />
+                      <LoadingSpinner label="Opening..." size="sm" color="blue" fontFamily={settings.fontFamily} />
                     </div>
                   )}
                 </div>

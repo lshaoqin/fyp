@@ -135,7 +135,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       className="flex flex-col h-screen w-screen"
       style={{ backgroundColor: settings.backgroundColor }}
     >
-      <Header onBackClick={onBackClick} showSettings={false} />
+      <Header onBackClick={onBackClick} showSettings={false} fontFamily={settings.fontFamily} />
 
       {/* Main content area with scrollable settings */}
       <div className="flex-1 overflow-auto p-6 sm:p-8 lg:p-12 pb-0">

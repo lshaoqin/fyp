@@ -138,12 +138,12 @@ export const EditView: React.FC<EditViewProps> = ({
       style={{ backgroundColor: settings.backgroundColor }}
     >
       <div className="lg:border-b-4 lg:border-yellow-500 sticky top-0 z-10">
-        <Header onBackClick={handleBackClick} onSettingsClick={onSettingsClick} borderColor="none" />
+        <Header onBackClick={handleBackClick} onSettingsClick={onSettingsClick} borderColor="none" fontFamily={settings.fontFamily} />
       </div>
 
       {/* Formatting toolbar - sticky at top on mobile and tablets */}
       <div className="sticky top-16 z-10 flex gap-4 p-6 bg-white dark:bg-slate-900 border-b-4 border-yellow-500 flex-wrap justify-center lg:hidden">
-        <Button
+ <Button fontFamily={settings.fontFamily} 
           onClick={handleBold}
           disabled={!selectedRange}
           icon={
@@ -152,7 +152,7 @@ export const EditView: React.FC<EditViewProps> = ({
         >
           Bold
         </Button>
-        <Button
+ <Button fontFamily={settings.fontFamily} 
           onClick={handleSave}
           icon={<CheckIcon className="w-6 h-6" />}
         >
@@ -197,7 +197,7 @@ export const EditView: React.FC<EditViewProps> = ({
       <div 
         className="hidden lg:flex gap-4 p-6 bg-white dark:bg-slate-900 border-t-4 border-yellow-500 flex-wrap justify-center transition-all duration-300"
       >
-        <Button
+ <Button fontFamily={settings.fontFamily} 
           onClick={handleBold}
           disabled={!selectedRange}
           icon={
@@ -206,7 +206,7 @@ export const EditView: React.FC<EditViewProps> = ({
         >
           Bold
         </Button>
-        <Button
+ <Button fontFamily={settings.fontFamily} 
           onClick={handleSave}
           icon={<CheckIcon className="w-6 h-6" />}
         >
