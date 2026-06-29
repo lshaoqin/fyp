@@ -15,6 +15,7 @@ interface SavedFilesViewProps {
   onSettingsClick: () => void;
   onOpenFile: (documentId: string) => void;
   onDeleteFile: (documentId: string) => void;
+  onDeleteFiles: (documentIds: string[]) => void;
 }
 
 export const SavedFilesView: React.FC<SavedFilesViewProps> = ({
@@ -27,11 +28,15 @@ export const SavedFilesView: React.FC<SavedFilesViewProps> = ({
   onSettingsClick,
   onOpenFile,
   onDeleteFile,
+  onDeleteFiles,
 }) => {
   const [brokenPreviewIds, setBrokenPreviewIds] = React.useState<Set<string>>(new Set());
   const [loadedPreviewKeys, setLoadedPreviewKeys] = React.useState<Set<string>>(new Set());
   const [confirmDeleteId, setConfirmDeleteId] = React.useState<string | null>(null);
   const [sortBy, setSortBy] = React.useState<"updatedAtMs" | "createdAtMs">("updatedAtMs");
+  const [isSelectionMode, setIsSelectionMode] = React.useState(false);
+  const [selectedFileIds, setSelectedFileIds] = React.useState<Set<string>>(new Set());
+  const [confirmDeleteIds, setConfirmDeleteIds] = React.useState<string[] | null>(null);
 
   const sortedFiles = React.useMemo(
     () => [...files].sort((a, b) => b[sortBy] - a[sortBy]),
@@ -49,6 +54,35 @@ export const SavedFilesView: React.FC<SavedFilesViewProps> = ({
     setBrokenPreviewIds((prev) => new Set(Array.from(prev).filter((id) => currentFileIds.has(id))));
     setLoadedPreviewKeys((prev) => new Set(Array.from(prev).filter((key) => currentPreviewKeys.has(key))));
   }, [files]);
+
+  const toggleSelectionMode = () => {
+    setIsSelectionMode((prev) => !prev);
+    setSelectedFileIds(new Set());
+  };
+
+  const toggleFileSelection = (id: string) => {
+    setSelectedFileIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const exitSelectionMode = () => {
+    setIsSelectionMode(false);
+    setSelectedFileIds(new Set());
+  };
+
+  React.useEffect(() => {
+    if (files.length === 0 && isSelectionMode) {
+      setIsSelectionMode(false);
+      setSelectedFileIds(new Set());
+    }
+  }, [files.length, isSelectionMode]);
 
   return (
     <div className="flex flex-col h-screen w-screen bg-white dark:bg-slate-950">
@@ -100,6 +134,52 @@ export const SavedFilesView: React.FC<SavedFilesViewProps> = ({
         </div>
       )}
 
+      {/* Batch delete confirmation modal */}
+      {confirmDeleteIds && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-6"
+          onClick={() => setConfirmDeleteIds(null)}
+        >
+          <div
+            className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl p-8 max-w-sm w-full flex flex-col gap-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex flex-col gap-2">
+              <h2
+                className="text-2xl font-bold text-gray-900 dark:text-gray-100"
+                style={{ fontFamily: settings.fontFamily }}
+              >
+                Delete {confirmDeleteIds.length} file{confirmDeleteIds.length === 1 ? "" : "s"}?
+              </h2>
+              <p
+                className="text-base text-gray-600 dark:text-gray-400"
+                style={{ fontFamily: settings.fontFamily }}
+              >
+                This cannot be undone.
+              </p>
+            </div>
+            <div className="flex gap-4">
+              <button
+                type="button"
+                onClick={() => setConfirmDeleteIds(null)}
+                className="flex-1 py-3 px-4 rounded-xl text-lg font-semibold bg-gray-100 dark:bg-slate-700 text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors"
+                style={{ fontFamily: settings.fontFamily }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => { onDeleteFiles(confirmDeleteIds); setConfirmDeleteIds(null); }}
+                className="flex-1 py-3 px-4 rounded-xl text-lg font-semibold bg-red-500 text-white hover:bg-red-600 transition-colors"
+                style={{ fontFamily: settings.fontFamily }}
+              >
+                Delete {confirmDeleteIds.length > 1 ? "all" : ""}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="flex-1 overflow-auto p-6 sm:p-8">
         <div className="max-w-6xl mx-auto">
           <h1
@@ -108,7 +188,7 @@ export const SavedFilesView: React.FC<SavedFilesViewProps> = ({
           >
             My Files
           </h1>
-          <div className="flex items-center gap-3 mb-4">
+          <div className="flex items-center gap-3 mb-4 flex-wrap">
             <span className="text-sm text-gray-500 dark:text-gray-400" style={{ fontFamily: settings.fontFamily }}>Sort by:</span>
             <button
               type="button"
@@ -133,6 +213,18 @@ export const SavedFilesView: React.FC<SavedFilesViewProps> = ({
               style={{ fontFamily: settings.fontFamily }}
             >
               Date added
+            </button>
+            <button
+              type="button"
+              onClick={toggleSelectionMode}
+              className={`ml-auto px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors ${
+                isSelectionMode
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-600"
+              }`}
+              style={{ fontFamily: settings.fontFamily }}
+            >
+              {isSelectionMode ? "Cancel" : "Select"}
             </button>
           </div>
           {phoneNumber && (
@@ -166,17 +258,58 @@ export const SavedFilesView: React.FC<SavedFilesViewProps> = ({
                   return (
                 <div
                   key={item.id}
-                  role="button"
+                  role={isSelectionMode ? "checkbox" : "button"}
+                  aria-checked={isSelectionMode ? selectedFileIds.has(item.id) : undefined}
                   tabIndex={openingDocumentId ? -1 : 0}
-                  onClick={() => { if (!openingDocumentId) onOpenFile(item.id); }}
-                  onKeyDown={(e) => { if ((e.key === "Enter" || e.key === " ") && !openingDocumentId) onOpenFile(item.id); }}
-                  className={`relative w-full max-w-[220px] mx-auto text-left border border-blue-200 dark:border-blue-800 rounded-xl overflow-hidden transition-colors cursor-pointer select-none ${openingDocumentId ? "opacity-80 cursor-not-allowed" : "hover:bg-blue-50 dark:hover:bg-blue-950"}`}
+                  onClick={() => {
+                    if (openingDocumentId) return;
+                    if (isSelectionMode) {
+                      toggleFileSelection(item.id);
+                    } else {
+                      onOpenFile(item.id);
+                    }
+                  }}
+                  onKeyDown={(e) => {
+                    if (openingDocumentId) return;
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      if (isSelectionMode) {
+                        toggleFileSelection(item.id);
+                      } else {
+                        onOpenFile(item.id);
+                      }
+                    }
+                  }}
+                  className={`relative w-full max-w-[220px] mx-auto text-left border rounded-xl overflow-hidden transition-colors cursor-pointer select-none ${
+                    openingDocumentId
+                      ? "opacity-80 cursor-not-allowed"
+                      : isSelectionMode
+                        ? selectedFileIds.has(item.id)
+                          ? "border-blue-500 bg-blue-50 dark:bg-blue-950"
+                          : "border-blue-200 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-950"
+                        : "border-blue-200 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-950"
+                  }`}
                 >
                   <div className="flex flex-col">
                     <div
-                      className="relative w-full min-h-[220px] border-b border-blue-200 dark:border-blue-800 overflow-hidden bg-gray-100 dark:bg-slate-800"
+                      className={`relative w-full min-h-[220px] border-b overflow-hidden bg-gray-100 dark:bg-slate-800 ${
+                        isSelectionMode ? "border-blue-300 dark:border-blue-700" : "border-blue-200 dark:border-blue-800"
+                      }`}
                       style={{ aspectRatio: "3 / 4" }}
                     >
+                      {isSelectionMode && (
+                        <div className={`absolute top-2 left-2 z-10 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors bg-white dark:bg-slate-900 ${
+                          selectedFileIds.has(item.id)
+                            ? "border-blue-500 bg-blue-500"
+                            : "border-gray-400"
+                        }`}>
+                          {selectedFileIds.has(item.id) && (
+                            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                              <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                          )}
+                        </div>
+                      )}
                       {item.previewImageUrl && !brokenPreviewIds.has(item.id) ? (
                         <>
                           {!loadedPreviewKeys.has(previewKey) && (
@@ -236,7 +369,7 @@ export const SavedFilesView: React.FC<SavedFilesViewProps> = ({
                           })}
                         </p>
                       </div>
-                      {confirmDeleteId === item.id ? null : (
+                      {isSelectionMode || confirmDeleteId === item.id ? null : (
                         <button
                           type="button"
                           onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(item.id); }}
@@ -264,6 +397,34 @@ export const SavedFilesView: React.FC<SavedFilesViewProps> = ({
                   );
                 })()
               ))}
+            </div>
+          )}
+          {isSelectionMode && selectedFileIds.size > 0 && (
+            <div className="sticky bottom-0 mt-6 -mx-6 sm:-mx-8 px-6 sm:px-8 py-4 bg-white/95 dark:bg-slate-950/95 backdrop-blur-sm border-t border-gray-200 dark:border-gray-800 flex items-center justify-between gap-4">
+              <span
+                className="text-sm text-gray-600 dark:text-gray-400"
+                style={{ fontFamily: settings.fontFamily }}
+              >
+                {selectedFileIds.size} file{selectedFileIds.size === 1 ? "" : "s"} selected
+              </span>
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={exitSelectionMode}
+                  className="px-4 py-2 rounded-lg text-sm font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors"
+                  style={{ fontFamily: settings.fontFamily }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setConfirmDeleteIds(Array.from(selectedFileIds))}
+                  className="px-4 py-2 rounded-lg text-sm font-semibold bg-red-500 text-white hover:bg-red-600 transition-colors"
+                  style={{ fontFamily: settings.fontFamily }}
+                >
+                  Delete ({selectedFileIds.size})
+                </button>
+              </div>
             </div>
           )}
         </div>

@@ -14,6 +14,7 @@ import {
   loadUserDocument,
   saveUserDocument,
   deleteUserDocument,
+  batchDeleteUserDocuments,
   type SavedAudioEntry,
   type SavedDocumentSummary,
 } from "@/utils/firebase-user-files";
@@ -395,6 +396,16 @@ export default function Page() {
     try {
       await withAuthRetry(() => deleteUserDocument({ documentId }));
       setSavedFiles((prev) => prev.filter((f) => f.id !== documentId));
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      setError(message);
+    }
+  };
+
+  const handleBatchDeleteSavedFiles = async (documentIds: string[]) => {
+    try {
+      await withAuthRetry(() => batchDeleteUserDocuments({ documentIds }));
+      setSavedFiles((prev) => prev.filter((f) => !documentIds.includes(f.id)));
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       setError(message);
@@ -957,6 +968,7 @@ export default function Page() {
         }}
         onOpenFile={handleLoadSavedFile}
         onDeleteFile={handleDeleteSavedFile}
+        onDeleteFiles={handleBatchDeleteSavedFiles}
       />
     );
   }

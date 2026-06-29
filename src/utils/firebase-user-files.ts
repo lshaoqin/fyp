@@ -143,6 +143,21 @@ export async function deleteUserDocument(params: {
   }
 }
 
+export async function batchDeleteUserDocuments(params: {
+  documentIds: string[];
+}): Promise<void> {
+  for (const documentId of params.documentIds) {
+    const response = await fetch(`/api/user-files/${documentId}`, {
+      method: "DELETE",
+    });
+
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(data.error || "Failed to delete document");
+    }
+  }
+}
+
 export async function loadUserDocument(params: {
   documentId: string;
 }): Promise<SavedDocumentPayload> {
