@@ -224,7 +224,7 @@ export const SavedFilesView: React.FC<SavedFilesViewProps> = ({
               }`}
               style={{ fontFamily: settings.fontFamily }}
             >
-              {isSelectionMode ? "Cancel" : "Select"}
+              {isSelectionMode ? "Done" : "Delete multiple"}
             </button>
           </div>
           {phoneNumber && (
