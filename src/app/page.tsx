@@ -274,8 +274,10 @@ export default function Page() {
     );
 
     return () => {
-      root.unmount();
-      document.body.removeChild(container);
+      queueMicrotask(() => {
+        root.unmount();
+        document.body.removeChild(container);
+      });
     };
   }, [showFullscreenPrompt]);
 
