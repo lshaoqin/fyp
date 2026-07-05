@@ -39,6 +39,7 @@ interface ImageViewProps {
   onNextPage?: () => void;
   onPrevPage?: () => void;
   onCancelFormatting?: () => void;
+  onSavedWordsClick?: () => void;
 }
 
 export const ImageView: React.FC<ImageViewProps> = ({
@@ -57,6 +58,7 @@ export const ImageView: React.FC<ImageViewProps> = ({
   onNextPage,
   onPrevPage,
   onCancelFormatting,
+  onSavedWordsClick,
 }) => {
   const MIN_ZOOM = 1;
   const MAX_ZOOM = 3;
@@ -259,7 +261,7 @@ export const ImageView: React.FC<ImageViewProps> = ({
 
   return (
     <div className="flex flex-col h-screen w-screen bg-black">
-      <Header onBackClick={onBackClick} onSettingsClick={onSettingsClick} borderColor="blue" fontFamily={settings.fontFamily} />
+      <Header onBackClick={onBackClick} onSettingsClick={onSettingsClick} onSavedWordsClick={onSavedWordsClick} showSavedWords borderColor="blue" fontFamily={settings.fontFamily} />
 
       {/* Image Container */}
       <div className="flex-1 relative bg-black overflow-hidden">

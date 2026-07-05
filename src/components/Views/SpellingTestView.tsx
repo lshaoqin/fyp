@@ -11,6 +11,7 @@ interface SpellingTestViewProps {
   settings: TextSettings;
   onBackClick: () => void;
   onSettingsClick: () => void;
+  onSavedWordsClick?: () => void;
 }
 
 function shuffleAndPick(words: SavedWord[], count: number): SavedWord[] {
@@ -47,6 +48,7 @@ export const SpellingTestView: React.FC<SpellingTestViewProps> = ({
   settings,
   onBackClick,
   onSettingsClick,
+  onSavedWordsClick,
 }) => {
   const [testWords, setTestWords] = React.useState(() => shuffleAndPick(allWords, 10));
   const [currentIndex, setCurrentIndex] = React.useState(0);
@@ -115,7 +117,7 @@ export const SpellingTestView: React.FC<SpellingTestViewProps> = ({
 
   return (
     <div className="flex flex-col h-screen w-screen bg-white dark:bg-slate-950">
-      <Header onBackClick={handleExit} onSettingsClick={onSettingsClick} fontFamily={settings.fontFamily} />
+      <Header onBackClick={handleExit} onSettingsClick={onSettingsClick} onSavedWordsClick={onSavedWordsClick} showSavedWords fontFamily={settings.fontFamily} />
 
       <div className="flex-1 overflow-auto p-6 sm:p-8">
         <div className="max-w-2xl mx-auto">

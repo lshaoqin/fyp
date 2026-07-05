@@ -1,14 +1,16 @@
 import React, { ReactNode } from "react";
-import { ArrowLeftIcon, EnterFullScreenIcon, ExitFullScreenIcon, GearIcon, PersonIcon } from "@radix-ui/react-icons";
+import { ArrowLeftIcon, EnterFullScreenIcon, ExitFullScreenIcon, GearIcon, PersonIcon, BookmarkIcon } from "@radix-ui/react-icons";
 import { HelpPopover } from "../HelpPopover/HelpPopover";
 import { useFullscreen } from "@/hooks/useFullscreen";
 
 interface HeaderProps {
   onBackClick?: () => void;
   onSettingsClick?: () => void;
+  onSavedWordsClick?: () => void;
   showBackButton?: boolean;
   hideBackButton?: boolean;
   showSettings?: boolean;
+  showSavedWords?: boolean;
   showProfile?: boolean;
   title?: string;
   borderColor?: "gray" | "blue" | "green" | "none";
@@ -20,9 +22,11 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({
   onBackClick,
   onSettingsClick,
+  onSavedWordsClick,
   showBackButton = true,
   hideBackButton = false,
   showSettings = true,
+  showSavedWords = false,
   showProfile = false,
   title,
   borderColor = "gray",
@@ -77,6 +81,11 @@ export const Header: React.FC<HeaderProps> = ({
       {/* Right: Settings & Profile Icons */}
       <div className="flex-1 flex justify-end gap-6 items-center">
         <HelpPopover />
+        {showSavedWords && onSavedWordsClick && (
+          <button onClick={onSavedWordsClick} className="text-gray-600 dark:text-gray-400 hover:text-yellow-500 transition-colors" aria-label="Saved words">
+            <BookmarkIcon className="w-7 h-7" />
+          </button>
+        )}
         <button
           onClick={toggleFullscreen}
           className="text-gray-600 dark:text-gray-400 hover:text-yellow-500 transition-colors"

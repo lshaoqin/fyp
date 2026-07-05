@@ -1153,6 +1153,7 @@ export default function Page() {
         onBlockClick={formatBlockText}
         onUseFullText={formatFullText}
         onCancelFormatting={handleCancelFormatting}
+        onSavedWordsClick={handleOpenWordList}
       />
     );
   }
@@ -1177,6 +1178,7 @@ export default function Page() {
           wordTimestamps={wordTimestamps}
           currentPlaybackTime={currentPlaybackTime}
           settings={settings}
+          onSavedWordsClick={handleOpenWordList}
           onBackClick={() => {
             // Only warn if going back to upload view (no image means it's a written document)
             const goingToUpload = !result?.image_base64;
@@ -1319,6 +1321,7 @@ export default function Page() {
           setViewMode("settings");
         }}
         settings={settings}
+        onSavedWordsClick={handleOpenWordList}
       />
     );
   }
@@ -1353,6 +1356,7 @@ export default function Page() {
           setPreviousViewMode("spelling-test");
           setViewMode("settings");
         }}
+        onSavedWordsClick={handleOpenWordList}
       />
     );
   }
