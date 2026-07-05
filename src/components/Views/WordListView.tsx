@@ -189,7 +189,7 @@ export const WordListView: React.FC<WordListViewProps> = ({
                   ) : (
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
+                        <div className="flex items-baseline gap-2 flex-wrap">
                           <h3
                             className="text-xl font-bold text-gray-900 dark:text-white"
                             style={{ fontFamily: settings.fontFamily }}
