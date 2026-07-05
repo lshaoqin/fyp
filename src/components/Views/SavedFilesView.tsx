@@ -14,8 +14,8 @@ interface SavedFilesViewProps {
   onBackClick: () => void;
   onSettingsClick: () => void;
   onOpenFile: (documentId: string) => void;
-  onDeleteFile: (documentId: string) => void;
-  onDeleteFiles: (documentIds: string[]) => void;
+  onDeleteFile: (documentId: string) => Promise<void>;
+  onDeleteFiles: (documentIds: string[]) => Promise<void>;
 }
 
 export const SavedFilesView: React.FC<SavedFilesViewProps> = ({
@@ -37,6 +37,7 @@ export const SavedFilesView: React.FC<SavedFilesViewProps> = ({
   const [isSelectionMode, setIsSelectionMode] = React.useState(false);
   const [selectedFileIds, setSelectedFileIds] = React.useState<Set<string>>(new Set());
   const [confirmDeleteIds, setConfirmDeleteIds] = React.useState<string[] | null>(null);
+  const [deletingIds, setDeletingIds] = React.useState<Set<string>>(new Set());
 
   const sortedFiles = React.useMemo(
     () => [...files].sort((a, b) => b[sortBy] - a[sortBy]),
@@ -123,7 +124,7 @@ export const SavedFilesView: React.FC<SavedFilesViewProps> = ({
               </button>
               <button
                 type="button"
-                onClick={() => { onDeleteFile(confirmDeleteId); setConfirmDeleteId(null); }}
+                onClick={async () => { const id = confirmDeleteId; setConfirmDeleteId(null); setDeletingIds((prev) => new Set(prev).add(id)); try { await onDeleteFile(id); } finally { setDeletingIds((prev) => { const next = new Set(prev); next.delete(id); return next; }); } }}
                 className="flex-1 py-3 px-4 rounded-xl text-lg font-semibold bg-red-500 text-white hover:bg-red-600 transition-colors"
                 style={{ fontFamily: settings.fontFamily }}
               >
@@ -169,7 +170,7 @@ export const SavedFilesView: React.FC<SavedFilesViewProps> = ({
               </button>
               <button
                 type="button"
-                onClick={() => { onDeleteFiles(confirmDeleteIds); setConfirmDeleteIds(null); }}
+                onClick={async () => { const ids = confirmDeleteIds; setConfirmDeleteIds(null); setDeletingIds((prev) => { const next = new Set(prev); ids.forEach((id) => next.add(id)); return next; }); try { await onDeleteFiles(ids); } finally { setDeletingIds(new Set()); exitSelectionMode(); } }}
                 className="flex-1 py-3 px-4 rounded-xl text-lg font-semibold bg-red-500 text-white hover:bg-red-600 transition-colors"
                 style={{ fontFamily: settings.fontFamily }}
               >
@@ -180,7 +181,7 @@ export const SavedFilesView: React.FC<SavedFilesViewProps> = ({
         </div>
       )}
 
-      <div className="flex-1 overflow-auto p-6 sm:p-8">
+      <div className="flex-1 overflow-auto p-6 sm:p-8 pb-24">
         <div className="max-w-6xl mx-auto">
           <div className="flex items-center justify-between mb-2">
             <h1
@@ -290,13 +291,15 @@ export const SavedFilesView: React.FC<SavedFilesViewProps> = ({
                     }
                   }}
                   className={`relative w-full max-w-[220px] mx-auto text-left border rounded-xl overflow-hidden transition-colors cursor-pointer select-none ${
-                    openingDocumentId
-                      ? "opacity-80 cursor-not-allowed border-blue-200 dark:border-blue-800"
-                      : isSelectionMode
-                        ? selectedFileIds.has(item.id)
-                          ? "border-blue-500 bg-blue-50 dark:bg-blue-950"
+                    deletingIds.has(item.id)
+                      ? "opacity-50 grayscale pointer-events-none border-gray-300 dark:border-gray-600"
+                      : openingDocumentId
+                        ? "opacity-80 cursor-not-allowed border-blue-200 dark:border-blue-800"
+                        : isSelectionMode
+                          ? selectedFileIds.has(item.id)
+                            ? "border-blue-500 bg-blue-50 dark:bg-blue-950"
+                            : "border-blue-200 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-950"
                           : "border-blue-200 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-950"
-                        : "border-blue-200 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-950"
                   }`}
                 >
                   <div className="flex flex-col">
@@ -307,13 +310,13 @@ export const SavedFilesView: React.FC<SavedFilesViewProps> = ({
                       style={{ aspectRatio: "3 / 4" }}
                     >
                       {isSelectionMode && (
-                        <div className={`absolute top-2 left-2 z-10 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors bg-white dark:bg-slate-900 ${
+                        <div className={`absolute top-2 left-2 z-10 w-7 h-7 rounded-full border-2 flex items-center justify-center transition-all duration-200 shadow-sm ${
                           selectedFileIds.has(item.id)
-                            ? "border-blue-500 bg-blue-500"
-                            : "border-gray-400"
+                            ? "border-blue-600 bg-blue-600 ring-2 ring-blue-300 dark:ring-blue-700 ring-offset-1 ring-offset-white dark:ring-offset-slate-950"
+                            : "border-gray-300 dark:border-gray-500 bg-white dark:bg-slate-800"
                         }`}>
                           {selectedFileIds.has(item.id) && (
-                            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
                               <polyline points="20 6 9 17 4 12" />
                             </svg>
                           )}
@@ -397,7 +400,11 @@ export const SavedFilesView: React.FC<SavedFilesViewProps> = ({
                       )}
                     </div>
                   </div>
-                  {openingDocumentId === item.id && (
+                  {deletingIds.has(item.id) ? (
+                    <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/85 dark:bg-slate-900/85">
+                      <LoadingSpinner label="Deleting..." size="sm" color="blue" fontFamily={settings.fontFamily} />
+                    </div>
+                  ) : openingDocumentId === item.id && (
                     <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/85 dark:bg-slate-900/85">
                       <LoadingSpinner label="Opening..." size="sm" color="blue" fontFamily={settings.fontFamily} />
                     </div>
@@ -408,36 +415,49 @@ export const SavedFilesView: React.FC<SavedFilesViewProps> = ({
               ))}
             </div>
           )}
-          {isSelectionMode && selectedFileIds.size > 0 && (
-            <div className="sticky bottom-0 mt-6 -mx-6 sm:-mx-8 px-6 sm:px-8 py-4 bg-white/95 dark:bg-slate-950/95 backdrop-blur-sm border-t border-gray-200 dark:border-gray-800 flex items-center justify-between gap-4">
+        </div>
+      </div>
+      {isSelectionMode && (
+        <div className="fixed bottom-0 left-0 right-0 z-20 px-6 sm:px-8 py-4 bg-white/95 dark:bg-slate-950/95 backdrop-blur-sm border-t border-gray-200 dark:border-gray-800 flex items-center justify-between gap-4">
+          {deletingIds.size > 0 ? (
+            <div className="flex items-center gap-2">
+              <LoadingSpinner label="" size="sm" color="blue" fontFamily={settings.fontFamily} />
               <span
                 className="text-sm text-gray-600 dark:text-gray-400"
                 style={{ fontFamily: settings.fontFamily }}
               >
-                {selectedFileIds.size} file{selectedFileIds.size === 1 ? "" : "s"} selected
+                Deleting {deletingIds.size} file{deletingIds.size === 1 ? "" : "s"}...
               </span>
-              <div className="flex gap-3">
-                <button
-                  type="button"
-                  onClick={exitSelectionMode}
-                  className="px-4 py-2 rounded-lg text-sm font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors"
-                  style={{ fontFamily: settings.fontFamily }}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setConfirmDeleteIds(Array.from(selectedFileIds))}
-                  className="px-4 py-2 rounded-lg text-sm font-semibold bg-red-500 text-white hover:bg-red-600 transition-colors"
-                  style={{ fontFamily: settings.fontFamily }}
-                >
-                  Delete ({selectedFileIds.size})
-                </button>
-              </div>
             </div>
+          ) : (
+            <span
+              className="text-sm text-gray-600 dark:text-gray-400"
+              style={{ fontFamily: settings.fontFamily }}
+            >
+              {selectedFileIds.size === 0 ? "No file selected" : `${selectedFileIds.size} file${selectedFileIds.size === 1 ? "" : "s"} selected`}
+            </span>
           )}
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={exitSelectionMode}
+              className="px-4 py-2 rounded-lg text-sm font-semibold bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors"
+              style={{ fontFamily: settings.fontFamily }}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={() => setConfirmDeleteIds(Array.from(selectedFileIds))}
+              disabled={selectedFileIds.size === 0 || deletingIds.size > 0}
+              className="px-4 py-2 rounded-lg text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 bg-red-500 text-white hover:bg-red-600"
+              style={{ fontFamily: settings.fontFamily }}
+            >
+              Delete ({selectedFileIds.size})
+            </button>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };
