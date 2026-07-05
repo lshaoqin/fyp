@@ -8,6 +8,7 @@ import {
   Pencil2Icon,
   GearIcon,
   QuestionMarkCircledIcon,
+  BookmarkIcon,
 } from "@radix-ui/react-icons";
 import { LoadingSpinner, ViewBox, HelpPopover } from "@/components";
 import type { TextSettings } from "./SettingsView";
@@ -18,6 +19,7 @@ interface UploadViewProps {
   onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onWriteTextClick: () => void;
   onMyFilesClick?: () => void;
+  onSavedWordsClick?: () => void;
   settings?: TextSettings;
   onSettingsClick?: () => void;
   loadingFileCount?: number;
@@ -31,6 +33,7 @@ export const UploadView: React.FC<UploadViewProps> = ({
   onFileChange,
   onWriteTextClick,
   onMyFilesClick,
+  onSavedWordsClick,
   settings,
   onSettingsClick,
   loadingFileCount = 0,
@@ -134,6 +137,21 @@ export const UploadView: React.FC<UploadViewProps> = ({
                 style={{ fontFamily: getFontFamily() }}
               >
                 My Files
+              </span>
+            </button>
+          )}
+          {onSavedWordsClick && (
+            <button
+              onClick={onSavedWordsClick}
+              disabled={loading}
+              className="flex flex-row items-center justify-center gap-3 px-8 py-4 border-2 border-blue-400 rounded-lg cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-950 transition-colors w-full max-w-md disabled:cursor-not-allowed"
+            >
+              <BookmarkIcon className="w-6 h-6 text-blue-600 transition-colors" />
+              <span
+                className="font-semibold text-base text-blue-600 dark:text-blue-400"
+                style={{ fontFamily: getFontFamily() }}
+              >
+                Saved Words
               </span>
             </button>
           )}

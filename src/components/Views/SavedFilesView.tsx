@@ -182,12 +182,33 @@ export const SavedFilesView: React.FC<SavedFilesViewProps> = ({
 
       <div className="flex-1 overflow-auto p-6 sm:p-8">
         <div className="max-w-6xl mx-auto">
-          <h1
-            className="text-3xl font-bold text-blue-600 mb-2"
-            style={{ fontFamily: settings.fontFamily }}
-          >
-            My Files
-          </h1>
+          <div className="flex items-center justify-between mb-2">
+            <h1
+              className="text-3xl font-bold text-blue-600"
+              style={{ fontFamily: settings.fontFamily }}
+            >
+              My Files
+            </h1>
+            <button
+              type="button"
+              onClick={toggleSelectionMode}
+              title={isSelectionMode ? "Done" : "Delete multiple"}
+              aria-label={isSelectionMode ? "Done" : "Delete multiple"}
+              className={`p-2 rounded-lg transition-colors ${
+                isSelectionMode
+                  ? "bg-blue-600 text-white"
+                  : "bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-800"
+              }`}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="3 6 5 6 21 6" />
+                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                <path d="M10 11v6" />
+                <path d="M14 11v6" />
+                <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+              </svg>
+            </button>
+          </div>
           <div className="flex items-center gap-3 mb-4 flex-wrap">
             <span className="text-sm text-gray-500 dark:text-gray-400" style={{ fontFamily: settings.fontFamily }}>Sort by:</span>
             <button
@@ -213,18 +234,6 @@ export const SavedFilesView: React.FC<SavedFilesViewProps> = ({
               style={{ fontFamily: settings.fontFamily }}
             >
               Date added
-            </button>
-            <button
-              type="button"
-              onClick={toggleSelectionMode}
-              className={`ml-auto px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors ${
-                isSelectionMode
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-600"
-              }`}
-              style={{ fontFamily: settings.fontFamily }}
-            >
-              {isSelectionMode ? "Done" : "Delete multiple"}
             </button>
           </div>
           {phoneNumber && (

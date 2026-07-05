@@ -6,3 +6,5 @@ export { ListenView } from "./ListenView";
 export { WordHuntView } from "./WordHuntView";
 export { SettingsView } from "./SettingsView";
 export { EditView } from "./EditView";
+export { WordListView } from "./WordListView";
+export { SpellingTestView } from "./SpellingTestView";

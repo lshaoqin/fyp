@@ -41,6 +41,7 @@ interface TextViewProps {
   onStopAudio: () => void;
   settings: TextSettings;
   onEditClick: () => void;
+  onSavedWordsClick?: () => void;
 }
 
 export const TextView: React.FC<TextViewProps> = ({
@@ -58,6 +59,7 @@ export const TextView: React.FC<TextViewProps> = ({
   onStopAudio,
   settings,
   onEditClick,
+  onSavedWordsClick,
 }) => {
   type WordHuntMode = "pattern" | "vocabulary";
 
@@ -1142,7 +1144,7 @@ export const TextView: React.FC<TextViewProps> = ({
         className="flex flex-col h-screen w-screen"
         style={{ backgroundColor: settings.backgroundColor }}
       >
-        <Header onBackClick={handleTextViewBack} onSettingsClick={onSettingsClick} borderColor="blue" fontFamily={settings.fontFamily} />
+        <Header onBackClick={handleTextViewBack} onSettingsClick={onSettingsClick} onSavedWordsClick={onSavedWordsClick} showSavedWords borderColor="blue" fontFamily={settings.fontFamily} />
 
       {/* Content area — side-by-side on large screens in word hunt mode */}
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden min-h-0">

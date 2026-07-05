@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { UploadView, SavedFilesView, ImageView, TextView, SettingsView, EditView } from "@/components/Views";
+import { UploadView, SavedFilesView, ImageView, TextView, SettingsView, EditView, WordListView, SpellingTestView } from "@/components/Views";
 import type { TextSettings } from "@/components/Views/SettingsView";
 import PhoneAuthView from "@/components/Auth/PhoneAuthView";
 import { getFirebaseAuth } from "@/utils/firebase-client";
@@ -18,6 +18,7 @@ import {
   type SavedAudioEntry,
   type SavedDocumentSummary,
 } from "@/utils/firebase-user-files";
+import { listSavedWords, deleteSavedWord, updateSavedWord, setSavedWordsAuth, clearSavedWordsAuth, type SavedWord } from "@/utils/saved-words";
 
 interface TextBlock {
   text: string;
@@ -43,7 +44,7 @@ interface WordTimestamp {
   end: number;
 }
 
-type ViewMode = "upload" | "saved-files" | "image" | "text" | "settings" | "edit";
+type ViewMode = "upload" | "saved-files" | "image" | "text" | "settings" | "edit" | "word-list" | "spelling-test";
 
 const DEFAULT_SETTINGS: TextSettings = {
   fontFamily: "var(--font-poppins), sans-serif",
@@ -110,6 +111,8 @@ export default function Page() {
   const lastHighlightedWordRef = React.useRef<number>(-1);
   const [previousViewMode, setPreviousViewMode] = useState<ViewMode>("upload");
   const [showFullscreenPrompt, setShowFullscreenPrompt] = useState(false);
+  const [savedWords, setSavedWords] = useState<SavedWord[]>([]);
+  const [savedWordsLoading, setSavedWordsLoading] = useState(false);
   const autosaveInFlightRef = React.useRef(false);
   const autosavePendingRef = React.useRef(false);
   const activeSavedDocumentIdRef = React.useRef<string | null>(null);
@@ -158,6 +161,8 @@ export default function Page() {
         setFirebaseUser(null);
         setIsAuthenticated(false);
         await fetch("/api/auth/session", { method: "DELETE" });
+        clearSavedWordsAuth();
+        setSavedWords([]);
         setAuthLoading(false);
         return;
       }
@@ -175,6 +180,7 @@ export default function Page() {
         }
         setFirebaseUser(user);
         setIsAuthenticated(true);
+        setSavedWordsAuth(idToken);
       } catch (authErr) {
         const message = authErr instanceof Error ? authErr.message : String(authErr);
         setError(message);
@@ -268,8 +274,10 @@ export default function Page() {
     );
 
     return () => {
-      root.unmount();
-      document.body.removeChild(container);
+      queueMicrotask(() => {
+        root.unmount();
+        document.body.removeChild(container);
+      });
     };
   }, [showFullscreenPrompt]);
 
@@ -390,6 +398,48 @@ export default function Page() {
     } finally {
       setSavedFilesLoading(false);
     }
+  };
+
+  const handleOpenWordList = async () => {
+    setViewMode("word-list");
+    setError(null);
+    setSavedWordsLoading(true);
+    try {
+      const words = await listSavedWords();
+      setSavedWords(words);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      setError(message);
+    } finally {
+      setSavedWordsLoading(false);
+    }
+  };
+
+  const handleDeleteSavedWord = async (wordId: string) => {
+    try {
+      await deleteSavedWord(wordId);
+      setSavedWords((prev) => prev.filter((w) => w.id !== wordId));
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      setError(message);
+    }
+  };
+
+  const handleUpdateSavedWord = async (wordId: string, updates: { definition?: string; notes?: string }) => {
+    try {
+      await updateSavedWord(wordId, updates);
+      setSavedWords((prev) =>
+        prev.map((w) => (w.id === wordId ? { ...w, ...updates } : w))
+      );
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      setError(message);
+    }
+  };
+
+  const handleStartSpellingTest = () => {
+    if (savedWords.length === 0) return;
+    setViewMode("spelling-test");
   };
 
   const handleDeleteSavedFile = async (documentId: string) => {
@@ -982,6 +1032,7 @@ export default function Page() {
         onFileChange={handleFileChange}
         loadingFileCount={loadingFileCount}
         onMyFilesClick={!firebaseUser || firebaseUser.isAnonymous ? undefined : handleOpenSavedFiles}
+        onSavedWordsClick={handleOpenWordList}
         onWriteTextClick={() => {
           setResults([{
             blocks: [{ text: "", vertices: [] }],
@@ -1102,6 +1153,7 @@ export default function Page() {
         onBlockClick={formatBlockText}
         onUseFullText={formatFullText}
         onCancelFormatting={handleCancelFormatting}
+        onSavedWordsClick={handleOpenWordList}
       />
     );
   }
@@ -1126,6 +1178,7 @@ export default function Page() {
           wordTimestamps={wordTimestamps}
           currentPlaybackTime={currentPlaybackTime}
           settings={settings}
+          onSavedWordsClick={handleOpenWordList}
           onBackClick={() => {
             // Only warn if going back to upload view (no image means it's a written document)
             const goingToUpload = !result?.image_base64;
@@ -1268,6 +1321,42 @@ export default function Page() {
           setViewMode("settings");
         }}
         settings={settings}
+        onSavedWordsClick={handleOpenWordList}
+      />
+    );
+  }
+
+  // Word List View
+  if (viewMode === "word-list") {
+    return (
+      <WordListView
+        words={savedWords}
+        loading={savedWordsLoading}
+        settings={settings}
+        onBackClick={() => setViewMode("upload")}
+        onSettingsClick={() => {
+          setPreviousViewMode("word-list");
+          setViewMode("settings");
+        }}
+        onDeleteWord={handleDeleteSavedWord}
+        onUpdateWord={handleUpdateSavedWord}
+        onStartSpellingTest={handleStartSpellingTest}
+      />
+    );
+  }
+
+  // Spelling Test View
+  if (viewMode === "spelling-test") {
+    return (
+      <SpellingTestView
+        allWords={savedWords}
+        settings={settings}
+        onBackClick={() => setViewMode("word-list")}
+        onSettingsClick={() => {
+          setPreviousViewMode("spelling-test");
+          setViewMode("settings");
+        }}
+        onSavedWordsClick={handleOpenWordList}
       />
     );
   }

@@ -11,6 +11,7 @@ interface EditViewProps {
   onSave: (text: string) => void;
   onSettingsClick: () => void;
   settings: TextSettings;
+  onSavedWordsClick?: () => void;
 }
 
 export const EditView: React.FC<EditViewProps> = ({
@@ -19,6 +20,7 @@ export const EditView: React.FC<EditViewProps> = ({
   onSave,
   onSettingsClick,
   settings,
+  onSavedWordsClick,
 }) => {
   const [htmlContent, setHtmlContent] = useState(initialText);
   const [selectedRange, setSelectedRange] = useState<{ start: number; end: number } | null>(null);
@@ -138,7 +140,7 @@ export const EditView: React.FC<EditViewProps> = ({
       style={{ backgroundColor: settings.backgroundColor }}
     >
       <div className="lg:border-b lg:border-blue-400 dark:lg:border-blue-700 sticky top-0 z-10">
-        <Header onBackClick={handleBackClick} onSettingsClick={onSettingsClick} borderColor="none" fontFamily={settings.fontFamily} />
+        <Header onBackClick={handleBackClick} onSettingsClick={onSettingsClick} onSavedWordsClick={onSavedWordsClick} showSavedWords borderColor="none" fontFamily={settings.fontFamily} />
       </div>
 
       {/* Formatting toolbar - sticky at top on mobile and tablets */}

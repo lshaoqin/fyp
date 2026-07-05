@@ -1,12 +1,15 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { SpeakerLoudIcon, Cross2Icon } from "@radix-ui/react-icons";
+import { SpeakerLoudIcon, Cross2Icon, BookmarkIcon, BookmarkFilledIcon } from "@radix-ui/react-icons";
+import { saveWord, deleteSavedWord } from "@/utils/saved-words";
 
 const definitionCache = new Map<string, WordDefinitionData>();
 
 const normalizeWordForCache = (word: string): string =>
   word.replace(/^[^\w]+|[^\w]+$/g, "").toLowerCase();
+
+const wordSaveCache = new Map<string, string>();
 
 interface AudioReading {
   audio: string;
@@ -71,6 +74,9 @@ export const WordDefinitionPopover: React.FC<WordDefinitionPopoverProps> = ({
   const [spellingAudioPlaying, setSpellingAudioPlaying] = useState(false);
   const [practiceError, setPracticeError] = useState<string | null>(null);
   const [currentSpellingLetterIndex, setCurrentSpellingLetterIndex] = useState<number>(-1);
+  const [isSaved, setIsSaved] = useState(false);
+  const [saveLoading, setSaveLoading] = useState(false);
+  const savedWordIdRef = useRef<string | null>(null);
 
   const fullWordAudioRef = useRef<HTMLAudioElement | null>(null);
   const spellingAudioRef = useRef<HTMLAudioElement | null>(null);
@@ -288,6 +294,52 @@ export const WordDefinitionPopover: React.FC<WordDefinitionPopoverProps> = ({
   }, [isOpen, word, contextSentence, loadDefinition]);
 
   useEffect(() => {
+    if (!isOpen || !word) return;
+    const cacheKey = `${normalizeWordForCache(word)}|${contextSentence || ""}`;
+    const savedId = wordSaveCache.get(cacheKey);
+    setIsSaved(!!savedId);
+    savedWordIdRef.current = savedId || null;
+  }, [isOpen, word, contextSentence]);
+
+  const handleSaveToggle = useCallback(async () => {
+    if (!data) return;
+
+    const cacheKey = `${normalizeWordForCache(word)}|${contextSentence || ""}`;
+    setSaveLoading(true);
+
+    if (isSaved) {
+      const wordId = savedWordIdRef.current;
+      if (wordId) {
+        const success = await deleteSavedWord(wordId);
+        if (success) {
+          wordSaveCache.delete(cacheKey);
+          setIsSaved(false);
+          savedWordIdRef.current = null;
+        }
+      }
+    } else {
+      const saved = await saveWord({
+        word: data.word,
+        definition: data.definition,
+        partOfSpeech: data.part_of_speech || "",
+        exampleSentence: data.example_sentence || "",
+        contextSentence: contextSentence || "",
+        syllables: data.syllables || [],
+        illustration: (data.illustration as Record<string, unknown> | null) || null,
+        audio: (data.audio as Record<string, unknown> | null) || null,
+        notes: "",
+      });
+      if (saved) {
+        wordSaveCache.set(cacheKey, saved.id);
+        setIsSaved(true);
+        savedWordIdRef.current = saved.id;
+      }
+    }
+
+    setSaveLoading(false);
+  }, [data, isSaved, word, contextSentence]);
+
+  useEffect(() => {
     if (!isOpen) {
       stopAllAudio();
     }
@@ -369,19 +421,33 @@ export const WordDefinitionPopover: React.FC<WordDefinitionPopoverProps> = ({
                       {data.word}
                     </h3>
                   )}
-                  {data.audio?.full_word?.audio && (
+                  <div className="flex items-center gap-2 shrink-0">
                     <button
-                      onClick={playFullWordAudio}
-                      disabled={playingAudio}
-                      className="px-3 py-2 rounded-lg border border-blue-200 dark:border-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900 transition-colors disabled:opacity-50 flex items-center gap-2"
-                      title="Play full word"
+                      onClick={handleSaveToggle}
+                      disabled={saveLoading}
+                      className="px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
+                      title={isSaved ? "Remove from saved words" : "Save word"}
                     >
-                      <SpeakerLoudIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                      <span className="text-sm font-semibold text-blue-700 dark:text-blue-300">
-                        {playingAudio ? "Playing..." : "Hear word"}
-                      </span>
+                      {isSaved ? (
+                        <BookmarkFilledIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                      ) : (
+                        <BookmarkIcon className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                      )}
                     </button>
-                  )}
+                    {data.audio?.full_word?.audio && (
+                      <button
+                        onClick={playFullWordAudio}
+                        disabled={playingAudio}
+                        className="px-3 py-2 rounded-lg border border-blue-200 dark:border-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900 transition-colors disabled:opacity-50 flex items-center gap-2"
+                        title="Play full word"
+                      >
+                        <SpeakerLoudIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                        <span className="text-sm font-semibold text-blue-700 dark:text-blue-300">
+                          {playingAudio ? "Playing..." : "Hear word"}
+                        </span>
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 <div className="rounded-xl border border-indigo-200 dark:border-indigo-700 bg-indigo-50/70 dark:bg-indigo-900/20 p-4 space-y-2">
