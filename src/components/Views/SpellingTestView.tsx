@@ -18,6 +18,22 @@ function shuffleAndPick(words: SavedWord[], count: number): SavedWord[] {
   return shuffled.slice(0, Math.min(count, shuffled.length));
 }
 
+function levenshtein(a: string, b: string): number {
+  const m = a.length;
+  const n = b.length;
+  if (m === 0) return n;
+  if (n === 0) return m;
+  let prev = Array.from({ length: n + 1 }, (_, i) => i);
+  for (let i = 1; i <= m; i++) {
+    const curr = [i];
+    for (let j = 1; j <= n; j++) {
+      curr[j] = a[i - 1] === b[j - 1] ? prev[j - 1] : Math.min(prev[j], curr[j - 1], prev[j - 1]) + 1;
+    }
+    prev = curr;
+  }
+  return prev[n];
+}
+
 function getAudioUri(word: SavedWord): string | null {
   const audio = word.audio as Record<string, unknown> | null;
   const fullWord = audio?.full_word as { audio?: string } | undefined;
@@ -32,11 +48,12 @@ export const SpellingTestView: React.FC<SpellingTestViewProps> = ({
   onBackClick,
   onSettingsClick,
 }) => {
-  const [testWords] = React.useState(() => shuffleAndPick(allWords, 10));
+  const [testWords, setTestWords] = React.useState(() => shuffleAndPick(allWords, 10));
   const [currentIndex, setCurrentIndex] = React.useState(0);
   const [userInput, setUserInput] = React.useState("");
   const [results, setResults] = React.useState<boolean[]>([]);
   const [submitted, setSubmitted] = React.useState(false);
+  const [lastWasClose, setLastWasClose] = React.useState(false);
   const [playingAudio, setPlayingAudio] = React.useState(false);
   const inputRef = React.useRef<HTMLInputElement>(null);
 
@@ -61,24 +78,34 @@ export const SpellingTestView: React.FC<SpellingTestViewProps> = ({
     e.preventDefault();
     if (submitted || !userInput.trim()) return;
 
-    const isCorrect = userInput.trim().toLowerCase() === currentWord.word.toLowerCase();
+    const trimmed = userInput.trim().toLowerCase();
+    const correct = currentWord.word.toLowerCase();
+    const isCorrect = trimmed === correct;
     const newResults = [...results, isCorrect];
     setResults(newResults);
+    if (!isCorrect) {
+      const distance = levenshtein(trimmed, correct);
+      setLastWasClose(distance <= Math.max(2, Math.ceil(correct.length / 3)));
+    }
     setSubmitted(true);
   };
 
   const handleNext = () => {
     setUserInput("");
     setSubmitted(false);
+    setLastWasClose(false);
     setCurrentIndex((prev) => prev + 1);
   };
 
   const correctCount = results.filter(Boolean).length;
 
   const handleRestart = () => {
-    if (typeof window !== "undefined") {
-      window.location.reload();
-    }
+    setTestWords(shuffleAndPick(allWords, 10));
+    setCurrentIndex(0);
+    setUserInput("");
+    setResults([]);
+    setSubmitted(false);
+    setLastWasClose(false);
   };
 
   const handleExit = () => {
@@ -104,10 +131,10 @@ export const SpellingTestView: React.FC<SpellingTestViewProps> = ({
                 </p>
                 <p className="text-base text-gray-600 dark:text-gray-400" style={{ fontFamily: settings.fontFamily }}>
                   {correctCount === testWords.length
-                    ? "Perfect score! Well done."
+                    ? "All correct! Well done."
                     : correctCount >= testWords.length * 0.7
                       ? "Great job! Keep practising."
-                      : "Keep trying, you&apos;ll get better."}
+                      : "Keep practising — you're making progress!"}
                 </p>
               </div>
               <div className="space-y-3 w-full max-w-md">
@@ -232,7 +259,7 @@ export const SpellingTestView: React.FC<SpellingTestViewProps> = ({
                         </span>
                       ) : (
                         <span>
-                          Incorrect. The correct spelling is <strong>{currentWord.word}</strong>
+                          {lastWasClose ? "Almost!" : "Not quite!"} The correct spelling is <strong>{currentWord.word}</strong>
                         </span>
                       )}
                     </div>
