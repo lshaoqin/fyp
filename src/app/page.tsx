@@ -19,6 +19,7 @@ import {
   type SavedDocumentSummary,
 } from "@/utils/firebase-user-files";
 import { listSavedWords, deleteSavedWord, updateSavedWord, setSavedWordsAuth, clearSavedWordsAuth, type SavedWord } from "@/utils/saved-words";
+import { getTtsVoiceConfig, type ReaderLanguage } from "@/utils/tts-language";
 
 interface TextBlock {
   text: string;
@@ -52,7 +53,12 @@ const DEFAULT_SETTINGS: TextSettings = {
   fontColor: "#1a1a1a",
   lineSpacing: 1.5,
   backgroundColor: "#fffef5",
+  readingLanguage: "english",
 };
+
+function isReaderLanguage(value: unknown): value is ReaderLanguage {
+  return value === "english" || value === "mandarin" || value === "malay" || value === "tamil";
+}
 
 function loadSettingsFromCookie(): TextSettings {
   if (typeof document === "undefined") return DEFAULT_SETTINGS;
@@ -65,7 +71,14 @@ function loadSettingsFromCookie(): TextSettings {
   
   try {
     const decoded = decodeURIComponent(cookie.substring("textSettings=".length));
-    return JSON.parse(decoded);
+    const parsed = JSON.parse(decoded) as Partial<TextSettings>;
+    return {
+      ...DEFAULT_SETTINGS,
+      ...parsed,
+      readingLanguage: isReaderLanguage(parsed?.readingLanguage)
+        ? parsed.readingLanguage
+        : DEFAULT_SETTINGS.readingLanguage,
+    };
   } catch {
     return DEFAULT_SETTINGS;
   }
@@ -835,6 +848,7 @@ export default function Page() {
     try {
       // Remove HTML tags before sending to TTS
       const plainText = displayText.replace(/<[^>]*>/g, "");
+      const ttsConfig = getTtsVoiceConfig(settings.readingLanguage);
       
       const ttsSignal = ttsAbortControllerRef.current?.signal;
       const response = await withAuthRetry(() =>
@@ -842,7 +856,11 @@ export default function Page() {
           signal: ttsSignal,
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text: plainText }),
+          body: JSON.stringify({
+            text: plainText,
+            language_code: ttsConfig.languageCode,
+            voice_name: ttsConfig.voiceName,
+          }),
         })
       );
 

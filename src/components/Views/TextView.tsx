@@ -13,6 +13,7 @@ import type { WordHuntData } from "@/components/WordHunt/types";
 import type { TextSettings } from "./SettingsView";
 import { getQuestionAwareTipMessage, getTapSuccessMessage, WordHuntView } from "./WordHuntView";
 import { getFirebaseAuth } from "@/utils/firebase-client";
+import { getTtsVoiceConfig } from "@/utils/tts-language";
 
 interface WordTimestamp {
   word: string;
@@ -328,11 +329,17 @@ export const TextView: React.FC<TextViewProps> = ({
 
     const { chunkText, hintLineIndexes } = getRandomVocabularyChunk(displayText);
     const excludedWords = Array.from(vocabularyExcludedWordsRef.current);
+    const ttsConfig = getTtsVoiceConfig(settings.readingLanguage);
 
     const response = await fetch("/api/word-hunt", {
       method: "POST",
       headers,
-      body: JSON.stringify({ text: chunkText, excluded_words: excludedWords }),
+      body: JSON.stringify({
+        text: chunkText,
+        excluded_words: excludedWords,
+        language_code: ttsConfig.languageCode,
+        voice_name: ttsConfig.voiceName,
+      }),
     });
 
     if (!response.ok) {
@@ -388,7 +395,7 @@ export const TextView: React.FC<TextViewProps> = ({
       .forEach((word) => vocabularyExcludedWordsRef.current.add(word));
 
     return questionData;
-  }, [displayText, getRandomVocabularyChunk, normalizeToken]);
+  }, [displayText, getRandomVocabularyChunk, normalizeToken, settings.readingLanguage]);
 
   const stopWordHuntAudio = useCallback(() => {
     if (wordHuntAudioRef.current) {
@@ -466,13 +473,15 @@ export const TextView: React.FC<TextViewProps> = ({
     }
 
     try {
+      const ttsConfig = getTtsVoiceConfig(settings.readingLanguage);
       const response = await fetch("/api/tts/google", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           text: cleanWord,
           provider: "google",
-          voice_name: "en-US-Neural2-H",
+          language_code: ttsConfig.languageCode,
+          voice_name: ttsConfig.voiceName,
         }),
       });
 
@@ -500,7 +509,7 @@ export const TextView: React.FC<TextViewProps> = ({
     } catch {
       return null;
     }
-  }, [wordHuntWordAudioCache]);
+  }, [settings.readingLanguage, wordHuntWordAudioCache]);
 
   const playWordHuntAudio = async () => {
     const base64Audio = wordHuntData?.phoneme_audio?.audio;

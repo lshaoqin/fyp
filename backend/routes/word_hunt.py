@@ -19,6 +19,8 @@ def get_vocabulary_word_hunt():
             return jsonify({"error": "No text provided"}), 400
 
         text = str(data.get('text', '')).strip()
+        language_code = str(data.get('language_code', '') or '').strip() or 'en-US'
+        voice_name = str(data.get('voice_name', '') or '').strip() or 'en-US-Neural2-H'
         if not text:
             return jsonify({"error": "Empty text"}), 400
 
@@ -30,8 +32,8 @@ def get_vocabulary_word_hunt():
             try:
                 audio_content, _ = generate_speech_with_word_level_timestamps(
                     text=word,
-                    language_code='en-US',
-                    voice_name='en-US-Neural2-H'
+                    language_code=language_code,
+                    voice_name=voice_name,
                 )
                 word_audio[word] = {
                     "audio": base64.b64encode(audio_content).decode('utf-8'),

@@ -47,12 +47,12 @@ def get_syllabification(word: str) -> list:
         return []
 
 
-def synthesize_reading_payload(text: str) -> dict:
+def synthesize_reading_payload(text: str, language_code: str = 'en-US', voice_name: str = 'en-US-Neural2-H') -> dict:
     """Generate TTS audio and convert to API payload."""
     audio_content, _ = generate_speech_with_word_level_timestamps(
         text=text,
-        language_code='en-US',
-        voice_name='en-US-Neural2-H'
+        language_code=language_code,
+        voice_name=voice_name
     )
 
     return {
@@ -88,6 +88,8 @@ def define_word():
             return jsonify({"error": "Empty word after removing punctuation"}), 400
 
         context_sentence = str(data.get('context_sentence', '') or '').strip()
+        language_code = str(data.get('language_code', '') or '').strip() or 'en-US'
+        voice_name = str(data.get('voice_name', '') or '').strip() or 'en-US-Neural2-H'
 
         gemini_data = get_word_learning_data(word=word, context_sentence=context_sentence)
 
@@ -102,7 +104,11 @@ def define_word():
         syllables = get_syllabification(word) or [word]
         illustration = fetch_word_illustration(word)
 
-        full_word_audio = synthesize_reading_payload(word)
+        full_word_audio = synthesize_reading_payload(
+            word,
+            language_code=language_code,
+            voice_name=voice_name,
+        )
 
         response_data = {
             "word": word,

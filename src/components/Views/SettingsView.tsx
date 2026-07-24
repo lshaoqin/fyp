@@ -2,6 +2,11 @@
 
 import React, { useState, useEffect } from "react";
 import { Header, GradientReader } from "@/components";
+import {
+  type ReaderLanguage,
+  READER_LANGUAGE_OPTIONS,
+  TTS_LANGUAGE_CONFIG,
+} from "@/utils/tts-language";
 
 export interface TextSettings {
   fontFamily: string;
@@ -9,6 +14,7 @@ export interface TextSettings {
   fontColor: string;
   lineSpacing: number;
   backgroundColor: string;
+  readingLanguage: ReaderLanguage;
 }
 
 interface SettingsViewProps {
@@ -120,6 +126,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     onSettingsChange({ ...settings, backgroundColor });
   };
 
+  const handleReadingLanguageChange = (readingLanguage: ReaderLanguage) => {
+    onSettingsChange({ ...settings, readingLanguage });
+  };
+
   const handleRestoreDefaults = () => {
     onSettingsChange({
       fontFamily: "var(--font-poppins), sans-serif",
@@ -127,6 +137,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       fontColor: "#1a1a1a",
       lineSpacing: 1.5,
       backgroundColor: "#fffef5",
+      readingLanguage: "english",
     });
   };
 
@@ -175,6 +186,38 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   <span style={{ fontFamily: font.value }}>
                     {font.name}
                   </span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Font Size Selection */}
+          <div className="mb-8">
+            <label
+              className="block text-lg font-semibold mb-4"
+              style={{
+                fontFamily: settings.fontFamily,
+                color: getDisplayColor(),
+              }}
+            >
+              Reading Language
+            </label>
+            <div className="grid grid-cols-2 gap-3">
+              {READER_LANGUAGE_OPTIONS.map((language) => (
+                <button
+                  key={language}
+                  onClick={() => handleReadingLanguageChange(language)}
+                  className={`p-3 rounded-lg border-2 transition-all ${
+                    settings.readingLanguage === language
+                      ? "border-blue-600 bg-blue-100 dark:bg-blue-900"
+                      : "border-gray-300 dark:border-gray-600 hover:border-blue-400"
+                  }`}
+                  style={{
+                    fontFamily: settings.fontFamily,
+                    color: getDisplayColor(),
+                  }}
+                >
+                  {TTS_LANGUAGE_CONFIG[language].label}
                 </button>
               ))}
             </div>

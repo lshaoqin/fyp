@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { SpeakerLoudIcon, Cross2Icon, BookmarkIcon, BookmarkFilledIcon } from "@radix-ui/react-icons";
 import { saveWord, deleteSavedWord } from "@/utils/saved-words";
+import { getTtsVoiceConfig, type ReaderLanguage } from "@/utils/tts-language";
 
 const definitionCache = new Map<string, WordDefinitionData>();
 
@@ -28,6 +29,7 @@ interface ReaderTextSettings {
   fontSize: number;
   fontColor: string;
   lineSpacing: number;
+  readingLanguage: ReaderLanguage;
 }
 
 interface WordDefinitionData {
@@ -170,13 +172,15 @@ export const WordDefinitionPopover: React.FC<WordDefinitionPopoverProps> = ({
 
     try {
       const spellingPrompt = getSpellingAudioPrompt(data.word);
+      const ttsConfig = getTtsVoiceConfig(textSettings.readingLanguage);
       const response = await fetch("/api/tts/google", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           text: spellingPrompt,
           provider: "google",
-          voice_name: "en-US-Neural2-H",
+          language_code: ttsConfig.languageCode,
+          voice_name: ttsConfig.voiceName,
         }),
       });
 
@@ -254,12 +258,15 @@ export const WordDefinitionPopover: React.FC<WordDefinitionPopoverProps> = ({
     setLoading(true);
     setError(null);
     try {
+      const ttsConfig = getTtsVoiceConfig(textSettings.readingLanguage);
       const response = await fetch("/api/define-word", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           word,
           contextSentence: contextSentence || "",
+          language_code: ttsConfig.languageCode,
+          voice_name: ttsConfig.voiceName,
         }),
       });
 
@@ -282,7 +289,7 @@ export const WordDefinitionPopover: React.FC<WordDefinitionPopoverProps> = ({
     } finally {
       setLoading(false);
     }
-  }, [isOpen, word, contextSentence]);
+  }, [isOpen, word, contextSentence, textSettings.readingLanguage]);
 
   useEffect(() => {
     if (!isOpen || !word) return;
