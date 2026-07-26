@@ -113,7 +113,7 @@ export async function listUserDocuments(): Promise<SavedDocumentSummary[]> {
   }
 
   const documents = (data.documents || []) as Array<
-    SavedDocumentSummary & { hasPreview?: boolean; previewImageUrl?: string | null }
+    SavedDocumentSummary & { hasPreview?: boolean; previewImageUrl?: string | null; createdAtMs?: number }
   >;
   return documents.map((item) => ({
     id: item.id,
@@ -121,14 +121,14 @@ export async function listUserDocuments(): Promise<SavedDocumentSummary[]> {
     pageCount: item.pageCount,
     phoneNumber: item.phoneNumber,
     updatedAtMs: item.updatedAtMs,
-    createdAtMs: (item as SavedDocumentSummary & { createdAtMs?: number }).createdAtMs ?? item.updatedAtMs,
+    createdAtMs: item.createdAtMs ?? item.updatedAtMs,
     previewImageUrl:
       item.previewImageUrl
         ? `${item.previewImageUrl}?v=${item.updatedAtMs}`
         : item.hasPreview
           ? `/api/user-files/${item.id}/preview?v=${item.updatedAtMs}`
           : undefined,
-    previewText: (item as Record<string, unknown>).previewText as string | undefined,
+    previewText: item.previewText,
   }));
 }
 
