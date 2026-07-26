@@ -121,6 +121,10 @@ export default function Page() {
   const [wordTimestamps, setWordTimestamps] = useState<WordTimestamp[]>([]);
   const [currentPlaybackTime, setCurrentPlaybackTime] = useState(0);
   const [settings, setSettings] = useState<TextSettings>(DEFAULT_SETTINGS);
+  const settingsLoadedRef = React.useRef(false);
+  const handleReadingLanguageChange = React.useCallback((readingLanguage: ReaderLanguage) => {
+    setSettings((prev) => ({ ...prev, readingLanguage }));
+  }, []);
   const lastHighlightedWordRef = React.useRef<number>(-1);
   const [previousViewMode, setPreviousViewMode] = useState<ViewMode>("upload");
   const [showFullscreenPrompt, setShowFullscreenPrompt] = useState(false);
@@ -159,6 +163,7 @@ export default function Page() {
   useEffect(() => {
     const savedSettings = loadSettingsFromCookie();
     setSettings(savedSettings);
+    settingsLoadedRef.current = true;
   }, []);
 
   useEffect(() => {
@@ -206,8 +211,9 @@ export default function Page() {
     return () => unsubscribe();
   }, []);
 
-  // Save settings to cookie whenever they change
+  // Save settings to cookie whenever they change (after initial load)
   useEffect(() => {
+    if (!settingsLoadedRef.current) return;
     saveSettingsToCookie(settings);
   }, [settings]);
 
@@ -1071,6 +1077,8 @@ export default function Page() {
           setViewMode("settings");
         }}
         onCancelLoading={handleCancelLoading}
+        readingLanguage={settings.readingLanguage}
+        onReadingLanguageChange={handleReadingLanguageChange}
         authSection={
           firebaseUser?.phoneNumber ? (
             <p className="text-sm text-blue-700 dark:text-blue-300 text-center font-semibold">
@@ -1098,6 +1106,7 @@ export default function Page() {
         onOpenFile={handleLoadSavedFile}
         onDeleteFile={handleDeleteSavedFile}
         onDeleteFiles={handleBatchDeleteSavedFiles}
+        onReadingLanguageChange={handleReadingLanguageChange}
       />
     );
   }
@@ -1172,6 +1181,7 @@ export default function Page() {
         onUseFullText={formatFullText}
         onCancelFormatting={handleCancelFormatting}
         onSavedWordsClick={handleOpenWordList}
+        onReadingLanguageChange={handleReadingLanguageChange}
       />
     );
   }
@@ -1242,6 +1252,7 @@ export default function Page() {
             setPreviousViewMode("text");
             setViewMode("edit");
           }}
+          onReadingLanguageChange={handleReadingLanguageChange}
         />
         <audio 
           ref={audioRef} 
@@ -1340,6 +1351,7 @@ export default function Page() {
         }}
         settings={settings}
         onSavedWordsClick={handleOpenWordList}
+        onReadingLanguageChange={handleReadingLanguageChange}
       />
     );
   }
@@ -1359,6 +1371,7 @@ export default function Page() {
         onDeleteWord={handleDeleteSavedWord}
         onUpdateWord={handleUpdateSavedWord}
         onStartSpellingTest={handleStartSpellingTest}
+        onReadingLanguageChange={handleReadingLanguageChange}
       />
     );
   }
@@ -1375,6 +1388,7 @@ export default function Page() {
           setViewMode("settings");
         }}
         onSavedWordsClick={handleOpenWordList}
+        onReadingLanguageChange={handleReadingLanguageChange}
       />
     );
   }

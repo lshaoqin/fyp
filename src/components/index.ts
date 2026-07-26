@@ -1,6 +1,7 @@
 export { Button } from "./Button/Button";
 export { Header } from "./Header/Header";
 export { HelpPopover } from "./HelpPopover/HelpPopover";
+export { LanguageSelector } from "./LanguageSelector/LanguageSelector";
 export { ViewBox, TextViewBox } from "./ViewBox/ViewBox";
 export { LoadingSpinner } from "./LoadingSpinner/LoadingSpinner";
 export { MediaPlayer } from "./MediaPlayer";

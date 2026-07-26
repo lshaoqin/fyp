@@ -3,6 +3,7 @@
 import React from "react";
 import { Header, LoadingSpinner } from "@/components";
 import type { TextSettings } from "./SettingsView";
+import type { ReaderLanguage } from "@/utils/tts-language";
 import type { SavedDocumentSummary } from "@/utils/firebase-user-files";
 
 interface SavedFilesViewProps {
@@ -16,6 +17,7 @@ interface SavedFilesViewProps {
   onOpenFile: (documentId: string) => void;
   onDeleteFile: (documentId: string) => void;
   onDeleteFiles: (documentIds: string[]) => void;
+  onReadingLanguageChange?: (language: ReaderLanguage) => void;
 }
 
 export const SavedFilesView: React.FC<SavedFilesViewProps> = ({
@@ -29,6 +31,7 @@ export const SavedFilesView: React.FC<SavedFilesViewProps> = ({
   onOpenFile,
   onDeleteFile,
   onDeleteFiles,
+  onReadingLanguageChange,
 }) => {
   const [brokenPreviewIds, setBrokenPreviewIds] = React.useState<Set<string>>(new Set());
   const [loadedPreviewKeys, setLoadedPreviewKeys] = React.useState<Set<string>>(new Set());
@@ -86,7 +89,7 @@ export const SavedFilesView: React.FC<SavedFilesViewProps> = ({
 
   return (
     <div className="flex flex-col h-screen w-screen bg-white dark:bg-slate-950">
-      <Header onBackClick={onBackClick} onSettingsClick={onSettingsClick} fontFamily={settings.fontFamily} />
+      <Header onBackClick={onBackClick} onSettingsClick={onSettingsClick} fontFamily={settings.fontFamily} readingLanguage={settings.readingLanguage} onReadingLanguageChange={onReadingLanguageChange} />
 
       {/* Delete confirmation modal */}
       {confirmDeleteId && (

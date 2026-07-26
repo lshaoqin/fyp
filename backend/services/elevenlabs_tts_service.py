@@ -12,6 +12,12 @@ DEFAULT_ELEVENLABS_MODEL_ID = "eleven_flash_v2_5"
 DEFAULT_ELEVENLABS_VOICE_ID = "Xb7hH8MSUJpSbSDYk0k2"
 DEFAULT_SAMPLE_RATE = 24000
 
+LANGUAGE_VOICE_MAP: dict[str, str] = {
+    "cmn-CN": "bhJUNIXWQQ94l8eI2VUf",
+    "ms-MY": "BeIxObt4dYBRJLYoe1hU",
+    "ta-IN": "gqFUMFHCD2nbbcYVtPGB",
+}
+
 
 class ElevenLabsTTSUnavailable(Exception):
     """Raised when ElevenLabs cannot be used and caller should fall back."""
@@ -131,8 +137,12 @@ def _request_json(api_key: str, url: str, payload: dict) -> dict:
         raise ElevenLabsRequestError(502, "Invalid JSON response from ElevenLabs") from err
 
 
-def generate_speech_with_word_level_timestamps(text: str):
+def generate_speech_with_word_level_timestamps(text: str, language_code: str = "en-US"):
     """Generate speech and word timestamps from ElevenLabs.
+
+    Args:
+        text: The text to synthesize.
+        language_code: BCP-47 language code (e.g. "en-US", "cmn-CN", "ms-MY", "ta-IN").
 
     Returns:
         tuple: (audio_bytes, word_timestamps, sample_rate, audio_mime_type)
@@ -145,8 +155,8 @@ def generate_speech_with_word_level_timestamps(text: str):
     if not api_key:
         raise ElevenLabsTTSUnavailable("ELEVENLABS_API_KEY is not configured")
 
-    # Free-plan safe default non-library voice; avoids extra voices-list API call.
-    voice_id = DEFAULT_ELEVENLABS_VOICE_ID
+    # Pick voice by language; fall back to default for English/unknown.
+    voice_id = LANGUAGE_VOICE_MAP.get(language_code, DEFAULT_ELEVENLABS_VOICE_ID)
     model_id = os.getenv("ELEVENLABS_MODEL_ID", DEFAULT_ELEVENLABS_MODEL_ID).strip() or DEFAULT_ELEVENLABS_MODEL_ID
 
     payload = {

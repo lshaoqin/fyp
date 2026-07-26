@@ -13,7 +13,7 @@ import type { WordHuntData } from "@/components/WordHunt/types";
 import type { TextSettings } from "./SettingsView";
 import { getQuestionAwareTipMessage, getTapSuccessMessage, WordHuntView } from "./WordHuntView";
 import { getFirebaseAuth } from "@/utils/firebase-client";
-import { getTtsVoiceConfig } from "@/utils/tts-language";
+import { getTtsVoiceConfig, type ReaderLanguage } from "@/utils/tts-language";
 
 interface WordTimestamp {
   word: string;
@@ -43,6 +43,7 @@ interface TextViewProps {
   settings: TextSettings;
   onEditClick: () => void;
   onSavedWordsClick?: () => void;
+  onReadingLanguageChange?: (language: ReaderLanguage) => void;
 }
 
 export const TextView: React.FC<TextViewProps> = ({
@@ -61,6 +62,7 @@ export const TextView: React.FC<TextViewProps> = ({
   settings,
   onEditClick,
   onSavedWordsClick,
+  onReadingLanguageChange,
 }) => {
   type WordHuntMode = "pattern" | "vocabulary";
 
@@ -529,6 +531,11 @@ export const TextView: React.FC<TextViewProps> = ({
   };
 
   const startWordHunt = useCallback(async (modeOverride?: WordHuntMode) => {
+    if (settings.readingLanguage !== "english") {
+      setWordHuntFeedback("Word hunt is only available in English.");
+      return;
+    }
+
     const activeMode = modeOverride ?? selectedWordHuntMode;
     if (modeOverride) {
       setSelectedWordHuntMode(modeOverride);
@@ -579,7 +586,7 @@ export const TextView: React.FC<TextViewProps> = ({
     } finally {
       setWordHuntLoading(false);
     }
-  }, [fetchVocabularyWordHuntQuestion, selectedWordHuntMode, wordHuntData, wordHuntQuestionPool]);
+  }, [fetchVocabularyWordHuntQuestion, selectedWordHuntMode, wordHuntData, wordHuntQuestionPool, settings.readingLanguage]);
 
   const loadNextVocabularyQuestion = useCallback(async () => {
     setWordHuntLoading(true);
@@ -689,10 +696,11 @@ export const TextView: React.FC<TextViewProps> = ({
 
   const handleWordTapForDefinition = useCallback((word: string, sentenceContext: string) => {
     if (handleWordTapForWordHunt(word)) return;
+    if (settings.readingLanguage !== "english") return;
     setSelectedWord(word);
     setSelectedWordContext(sentenceContext);
     setIsPopoverOpen(true);
-  }, [handleWordTapForWordHunt]);
+  }, [handleWordTapForWordHunt, settings.readingLanguage]);
 
   const getSentenceFromCharRange = (plainText: string, start: number, end: number): string => {
     if (!plainText.trim()) return "";
@@ -1153,7 +1161,7 @@ export const TextView: React.FC<TextViewProps> = ({
         className="flex flex-col h-screen w-screen"
         style={{ backgroundColor: settings.backgroundColor }}
       >
-        <Header onBackClick={handleTextViewBack} onSettingsClick={onSettingsClick} onSavedWordsClick={onSavedWordsClick} showSavedWords borderColor="blue" fontFamily={settings.fontFamily} />
+        <Header onBackClick={handleTextViewBack} onSettingsClick={onSettingsClick} onSavedWordsClick={onSavedWordsClick} showSavedWords borderColor="blue" fontFamily={settings.fontFamily} readingLanguage={settings.readingLanguage} onReadingLanguageChange={onReadingLanguageChange} />
 
       {/* Content area — side-by-side on large screens in word hunt mode */}
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden min-h-0">
@@ -1314,7 +1322,7 @@ export const TextView: React.FC<TextViewProps> = ({
             </Button>
             <Button
               onClick={startWordHunt}
-              disabled={wordHuntLoading || isFormatting}
+              disabled={wordHuntLoading || isFormatting || settings.readingLanguage !== "english"}
               icon={<FileTextIcon className="w-6 h-6" />}
             >
               {wordHuntLoading ? "Preparing..." : "Word hunt"}

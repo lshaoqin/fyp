@@ -2,11 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Header, GradientReader } from "@/components";
-import {
-  type ReaderLanguage,
-  READER_LANGUAGE_OPTIONS,
-  TTS_LANGUAGE_CONFIG,
-} from "@/utils/tts-language";
+import type { ReaderLanguage } from "@/utils/tts-language";
 
 export interface TextSettings {
   fontFamily: string;
@@ -126,10 +122,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     onSettingsChange({ ...settings, backgroundColor });
   };
 
-  const handleReadingLanguageChange = (readingLanguage: ReaderLanguage) => {
-    onSettingsChange({ ...settings, readingLanguage });
-  };
-
   const handleRestoreDefaults = () => {
     onSettingsChange({
       fontFamily: "var(--font-poppins), sans-serif",
@@ -146,7 +138,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       className="flex flex-col h-screen w-screen"
       style={{ backgroundColor: settings.backgroundColor }}
     >
-      <Header onBackClick={onBackClick} showSettings={false} fontFamily={settings.fontFamily} />
+      <Header onBackClick={onBackClick} showSettings={false} fontFamily={settings.fontFamily} readingLanguage={settings.readingLanguage} onReadingLanguageChange={(lang) => onSettingsChange({ ...settings, readingLanguage: lang })} />
 
       {/* Main content area with scrollable settings */}
       <div className="flex-1 overflow-auto p-6 sm:p-8 lg:p-12 pb-0">
@@ -186,38 +178,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   <span style={{ fontFamily: font.value }}>
                     {font.name}
                   </span>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Font Size Selection */}
-          <div className="mb-8">
-            <label
-              className="block text-lg font-semibold mb-4"
-              style={{
-                fontFamily: settings.fontFamily,
-                color: getDisplayColor(),
-              }}
-            >
-              Reading Language
-            </label>
-            <div className="grid grid-cols-2 gap-3">
-              {READER_LANGUAGE_OPTIONS.map((language) => (
-                <button
-                  key={language}
-                  onClick={() => handleReadingLanguageChange(language)}
-                  className={`p-3 rounded-lg border-2 transition-all ${
-                    settings.readingLanguage === language
-                      ? "border-blue-600 bg-blue-100 dark:bg-blue-900"
-                      : "border-gray-300 dark:border-gray-600 hover:border-blue-400"
-                  }`}
-                  style={{
-                    fontFamily: settings.fontFamily,
-                    color: getDisplayColor(),
-                  }}
-                >
-                  {TTS_LANGUAGE_CONFIG[language].label}
                 </button>
               ))}
             </div>
