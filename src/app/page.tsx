@@ -526,7 +526,8 @@ export default function Page() {
   }, [activeSavedDocumentId]);
 
   useEffect(() => {
-    if (!isAuthenticated || !firebaseUser || firebaseUser.isAnonymous || results.length === 0) {
+    const hasImage = results[0]?.image_base64;
+    if (!isAuthenticated || !firebaseUser || firebaseUser.isAnonymous || results.length === 0 || !hasImage) {
       return;
     }
 

@@ -354,6 +354,15 @@ export const SavedFilesView: React.FC<SavedFilesViewProps> = ({
                             }}
                           />
                         </>
+                      ) : item.previewText ? (
+                        <div className="w-full h-full flex items-center justify-center p-3">
+                          <p
+                            className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed line-clamp-6"
+                            style={{ fontFamily: settings.fontFamily }}
+                          >
+                            {item.previewText}
+                          </p>
+                        </div>
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-sm text-gray-500 dark:text-gray-400">
                           No preview
