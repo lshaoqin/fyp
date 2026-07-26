@@ -536,7 +536,8 @@ export const TextView: React.FC<TextViewProps> = ({
       return;
     }
 
-    const activeMode = modeOverride ?? selectedWordHuntMode;
+    const isMalay = settings.readingLanguage === "malay";
+    const activeMode = isMalay ? "vocabulary" : (modeOverride ?? selectedWordHuntMode);
     if (modeOverride) {
       setSelectedWordHuntMode(modeOverride);
     }
@@ -1238,21 +1239,25 @@ export const TextView: React.FC<TextViewProps> = ({
       <div className="flex gap-3 p-3 bg-white dark:bg-slate-900 border-t border-blue-400 dark:border-blue-700 flex-wrap justify-center items-center">
         {isWordHuntMode ? (
           <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">Mode:</span>
-            <button
-              type="button"
-              onClick={() => handleWordHuntModeSwitch("pattern")}
-              disabled={wordHuntLoading}
-              aria-pressed={currentWordHuntMode === "pattern"}
-              className={[
-                "px-3 py-1 rounded-md text-sm font-semibold border transition-colors disabled:opacity-60",
-                currentWordHuntMode === "pattern"
-                  ? "bg-blue-600 text-white border-blue-600 ring-2 ring-blue-300 dark:ring-blue-500 shadow-sm"
-                  : "bg-white text-slate-700 border-slate-300 hover:bg-slate-100 dark:bg-slate-700 dark:text-slate-100 dark:border-slate-500 dark:hover:bg-slate-600",
-              ].join(" ")}
-            >
-              Phonetics
-            </button>
+            {settings.readingLanguage !== "malay" && (
+              <>
+                <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">Mode:</span>
+                <button
+                  type="button"
+                  onClick={() => handleWordHuntModeSwitch("pattern")}
+                  disabled={wordHuntLoading}
+                  aria-pressed={currentWordHuntMode === "pattern"}
+                  className={[
+                    "px-3 py-1 rounded-md text-sm font-semibold border transition-colors disabled:opacity-60",
+                    currentWordHuntMode === "pattern"
+                      ? "bg-blue-600 text-white border-blue-600 ring-2 ring-blue-300 dark:ring-blue-500 shadow-sm"
+                      : "bg-white text-slate-700 border-slate-300 hover:bg-slate-100 dark:bg-slate-700 dark:text-slate-100 dark:border-slate-500 dark:hover:bg-slate-600",
+                  ].join(" ")}
+                >
+                  Phonetics
+                </button>
+              </>
+            )}
             <button
               type="button"
               onClick={() => handleWordHuntModeSwitch("vocabulary")}
