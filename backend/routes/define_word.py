@@ -14,7 +14,10 @@ define_word_bp = Blueprint('define_word', __name__)
 
 # Initialize hyphenators
 hyphenator_en = Pyphen(lang='en_US')
-hyphenator_ms = Pyphen(lang='ms_MY')
+try:
+    hyphenator_ms = Pyphen(lang='ms_MY')
+except Exception:
+    hyphenator_ms = hyphenator_en
 
 
 def strip_punctuation(word: str) -> str:
