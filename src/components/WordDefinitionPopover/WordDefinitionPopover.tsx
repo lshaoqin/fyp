@@ -99,7 +99,7 @@ export const WordDefinitionPopover: React.FC<WordDefinitionPopoverProps> = ({
 
   const getSpellingLetters = (value: string): string[] => {
     const lettersOnly = value.replace(/[^\p{L}]/gu, "");
-    const source = (lettersOnly || value).toUpperCase();
+    const source = (lettersOnly || value).toLowerCase();
     return Array.from(source);
   };
 
