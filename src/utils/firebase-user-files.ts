@@ -40,6 +40,7 @@ export interface SavedDocumentSummary {
   pageCount: number;
   phoneNumber?: string;
   previewImageUrl?: string;
+  previewText?: string;
   updatedAtMs: number;
   createdAtMs: number;
 }
@@ -127,6 +128,7 @@ export async function listUserDocuments(): Promise<SavedDocumentSummary[]> {
         : item.hasPreview
           ? `/api/user-files/${item.id}/preview?v=${item.updatedAtMs}`
           : undefined,
+    previewText: (item as Record<string, unknown>).previewText as string | undefined,
   }));
 }
 

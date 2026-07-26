@@ -4,6 +4,7 @@ import React, { useEffect, useRef } from "react";
 import { ZoomInIcon, ZoomOutIcon } from "@radix-ui/react-icons";
 import { Header, LoadingSpinner } from "@/components";
 import type { TextSettings } from "./SettingsView";
+import type { ReaderLanguage } from "@/utils/tts-language";
 
 interface TextBlock {
   text: string;
@@ -40,6 +41,7 @@ interface ImageViewProps {
   onPrevPage?: () => void;
   onCancelFormatting?: () => void;
   onSavedWordsClick?: () => void;
+  onReadingLanguageChange?: (language: ReaderLanguage) => void;
 }
 
 export const ImageView: React.FC<ImageViewProps> = ({
@@ -59,6 +61,7 @@ export const ImageView: React.FC<ImageViewProps> = ({
   onPrevPage,
   onCancelFormatting,
   onSavedWordsClick,
+  onReadingLanguageChange,
 }) => {
   const MIN_ZOOM = 1;
   const MAX_ZOOM = 3;
@@ -261,7 +264,7 @@ export const ImageView: React.FC<ImageViewProps> = ({
 
   return (
     <div className="flex flex-col h-screen w-screen bg-black">
-      <Header onBackClick={onBackClick} onSettingsClick={onSettingsClick} onSavedWordsClick={onSavedWordsClick} showSavedWords borderColor="blue" fontFamily={settings.fontFamily} />
+      <Header onBackClick={onBackClick} onSettingsClick={onSettingsClick} onSavedWordsClick={onSavedWordsClick} showSavedWords borderColor="blue" fontFamily={settings.fontFamily} readingLanguage={settings.readingLanguage} onReadingLanguageChange={onReadingLanguageChange} />
 
       {/* Image Container */}
       <div className="flex-1 relative bg-black overflow-hidden">

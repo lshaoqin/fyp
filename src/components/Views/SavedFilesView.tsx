@@ -3,6 +3,7 @@
 import React from "react";
 import { Header, LoadingSpinner } from "@/components";
 import type { TextSettings } from "./SettingsView";
+import type { ReaderLanguage } from "@/utils/tts-language";
 import type { SavedDocumentSummary } from "@/utils/firebase-user-files";
 
 interface SavedFilesViewProps {
@@ -16,6 +17,7 @@ interface SavedFilesViewProps {
   onOpenFile: (documentId: string) => void;
   onDeleteFile: (documentId: string) => void;
   onDeleteFiles: (documentIds: string[]) => void;
+  onReadingLanguageChange?: (language: ReaderLanguage) => void;
 }
 
 export const SavedFilesView: React.FC<SavedFilesViewProps> = ({
@@ -29,6 +31,7 @@ export const SavedFilesView: React.FC<SavedFilesViewProps> = ({
   onOpenFile,
   onDeleteFile,
   onDeleteFiles,
+  onReadingLanguageChange,
 }) => {
   const [brokenPreviewIds, setBrokenPreviewIds] = React.useState<Set<string>>(new Set());
   const [loadedPreviewKeys, setLoadedPreviewKeys] = React.useState<Set<string>>(new Set());
@@ -86,7 +89,7 @@ export const SavedFilesView: React.FC<SavedFilesViewProps> = ({
 
   return (
     <div className="flex flex-col h-screen w-screen bg-white dark:bg-slate-950">
-      <Header onBackClick={onBackClick} onSettingsClick={onSettingsClick} fontFamily={settings.fontFamily} />
+      <Header onBackClick={onBackClick} onSettingsClick={onSettingsClick} fontFamily={settings.fontFamily} readingLanguage={settings.readingLanguage} onReadingLanguageChange={onReadingLanguageChange} />
 
       {/* Delete confirmation modal */}
       {confirmDeleteId && (
@@ -351,6 +354,15 @@ export const SavedFilesView: React.FC<SavedFilesViewProps> = ({
                             }}
                           />
                         </>
+                      ) : item.previewText ? (
+                        <div className="w-full h-full flex items-center justify-center p-3">
+                          <p
+                            className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed line-clamp-6"
+                            style={{ fontFamily: settings.fontFamily }}
+                          >
+                            {item.previewText}
+                          </p>
+                        </div>
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-sm text-gray-500 dark:text-gray-400">
                           No preview

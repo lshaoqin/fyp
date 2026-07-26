@@ -10,8 +10,9 @@ import {
   QuestionMarkCircledIcon,
   BookmarkIcon,
 } from "@radix-ui/react-icons";
-import { LoadingSpinner, ViewBox, HelpPopover } from "@/components";
+import { LoadingSpinner, ViewBox, HelpPopover, LanguageSelector } from "@/components";
 import type { TextSettings } from "./SettingsView";
+import type { ReaderLanguage } from "@/utils/tts-language";
 
 interface UploadViewProps {
   loading: boolean;
@@ -25,6 +26,8 @@ interface UploadViewProps {
   loadingFileCount?: number;
   onCancelLoading?: () => void;
   authSection?: React.ReactNode;
+  readingLanguage: ReaderLanguage;
+  onReadingLanguageChange: (language: ReaderLanguage) => void;
 }
 
 export const UploadView: React.FC<UploadViewProps> = ({
@@ -39,6 +42,8 @@ export const UploadView: React.FC<UploadViewProps> = ({
   loadingFileCount = 0,
   onCancelLoading,
   authSection,
+  readingLanguage,
+  onReadingLanguageChange,
 }) => {
   const getFontFamily = () => {
     if (!settings) return "var(--font-poppins), sans-serif";
@@ -155,7 +160,7 @@ export const UploadView: React.FC<UploadViewProps> = ({
               </span>
             </button>
           )}
-          <div className="grid grid-cols-2 gap-4 w-full max-w-md">
+          <div className="grid grid-cols-3 gap-4 w-full max-w-md">
             {onSettingsClick && (
               <button
                 onClick={onSettingsClick}
@@ -186,6 +191,14 @@ export const UploadView: React.FC<UploadViewProps> = ({
                 </span>
               </button>
             </HelpPopover>
+
+            <LanguageSelector
+              currentLanguage={readingLanguage}
+              onLanguageChange={onReadingLanguageChange}
+              variant="button"
+              fontFamily={getFontFamily()}
+              dropdownPosition="up"
+            />
           </div>
         </div>
         {authSection && (

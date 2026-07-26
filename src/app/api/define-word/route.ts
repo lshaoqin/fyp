@@ -7,7 +7,7 @@ export async function POST(request: NextRequest) {
     if (authResult instanceof NextResponse) return authResult;
 
     const body = await request.json();
-    const { word, contextSentence } = body;
+    const { word, contextSentence, language_code, voice_name } = body;
 
     if (!word || !word.trim()) {
       return NextResponse.json({ error: "No word provided" }, { status: 400 });
@@ -19,6 +19,9 @@ export async function POST(request: NextRequest) {
       word: word.trim(),
       context_sentence:
         typeof contextSentence === "string" ? contextSentence.trim() : "",
+      language_code:
+        typeof language_code === "string" ? language_code.trim() : undefined,
+      voice_name: typeof voice_name === "string" ? voice_name.trim() : undefined,
     };
 
     const headers: Record<string, string> = {

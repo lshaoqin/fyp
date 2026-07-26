@@ -75,6 +75,7 @@ def list_user_files():
             "pageCount": data.get("pageCount") or 0,
             "phoneNumber": data.get("phoneNumber"),
             "hasPreview": bool(data.get("previewPath")),
+            "previewText": data.get("previewText", ""),
             "updatedAtMs": updated_at_ms,
             "createdAtMs": created_at_ms,
         })
@@ -114,6 +115,7 @@ def save_user_file():
     first_page = results[0] if isinstance(results[0], dict) else {}
     first_image_base64 = first_page.get("image_base64")
     has_preview = False
+    preview_text = ""
 
     if isinstance(first_image_base64, str) and first_image_base64.strip():
         try:
@@ -122,6 +124,11 @@ def save_user_file():
             has_preview = True
         except Exception:
             has_preview = False
+
+    if not has_preview:
+        first_full_text = str(first_page.get("full_text") or "").strip()
+        if first_full_text:
+            preview_text = first_full_text[:200]
 
     metadata = {
         "title": _build_title(payload, data.get("title")),
@@ -133,6 +140,8 @@ def save_user_file():
 
     if has_preview:
         metadata["previewPath"] = preview_path
+    elif preview_text:
+        metadata["previewText"] = preview_text
 
     if not existing_document_id:
         metadata["createdAt"] = firestore.SERVER_TIMESTAMP

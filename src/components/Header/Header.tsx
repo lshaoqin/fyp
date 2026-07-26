@@ -1,7 +1,9 @@
 import React, { ReactNode } from "react";
 import { ArrowLeftIcon, EnterFullScreenIcon, ExitFullScreenIcon, GearIcon, PersonIcon, BookmarkIcon } from "@radix-ui/react-icons";
 import { HelpPopover } from "../HelpPopover/HelpPopover";
+import { LanguageSelector } from "../LanguageSelector/LanguageSelector";
 import { useFullscreen } from "@/hooks/useFullscreen";
+import type { ReaderLanguage } from "@/utils/tts-language";
 
 interface HeaderProps {
   onBackClick?: () => void;
@@ -17,6 +19,8 @@ interface HeaderProps {
   position?: "top" | "bottom";
   children?: ReactNode;
   fontFamily?: string;
+  readingLanguage?: ReaderLanguage;
+  onReadingLanguageChange?: (language: ReaderLanguage) => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -33,6 +37,8 @@ export const Header: React.FC<HeaderProps> = ({
   position = "top",
   children,
   fontFamily = "Verdana, Arial, Helvetica, sans-serif",
+  readingLanguage,
+  onReadingLanguageChange,
 }) => {
   const shouldShowBackButton = hideBackButton ? false : showBackButton;
   const { isFullscreen, toggleFullscreen } = useFullscreen();
@@ -81,6 +87,13 @@ export const Header: React.FC<HeaderProps> = ({
       {/* Right: Settings & Profile Icons */}
       <div className="flex-1 flex justify-end gap-6 items-center">
         <HelpPopover />
+        {readingLanguage && onReadingLanguageChange && (
+          <LanguageSelector
+            currentLanguage={readingLanguage}
+            onLanguageChange={onReadingLanguageChange}
+            variant="icon"
+          />
+        )}
         {showSavedWords && onSavedWordsClick && (
           <button onClick={onSavedWordsClick} className="text-gray-600 dark:text-gray-400 hover:text-yellow-500 transition-colors" aria-label="Saved words">
             <BookmarkIcon className="w-7 h-7" />

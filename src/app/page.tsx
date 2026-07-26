@@ -19,6 +19,7 @@ import {
   type SavedDocumentSummary,
 } from "@/utils/firebase-user-files";
 import { listSavedWords, deleteSavedWord, updateSavedWord, setSavedWordsAuth, clearSavedWordsAuth, type SavedWord } from "@/utils/saved-words";
+import { getTtsVoiceConfig, type ReaderLanguage } from "@/utils/tts-language";
 
 interface TextBlock {
   text: string;
@@ -52,7 +53,12 @@ const DEFAULT_SETTINGS: TextSettings = {
   fontColor: "#1a1a1a",
   lineSpacing: 1.5,
   backgroundColor: "#fffef5",
+  readingLanguage: "english",
 };
+
+function isReaderLanguage(value: unknown): value is ReaderLanguage {
+  return value === "english" || value === "mandarin" || value === "malay" || value === "tamil";
+}
 
 function loadSettingsFromCookie(): TextSettings {
   if (typeof document === "undefined") return DEFAULT_SETTINGS;
@@ -65,7 +71,14 @@ function loadSettingsFromCookie(): TextSettings {
   
   try {
     const decoded = decodeURIComponent(cookie.substring("textSettings=".length));
-    return JSON.parse(decoded);
+    const parsed = JSON.parse(decoded) as Partial<TextSettings>;
+    return {
+      ...DEFAULT_SETTINGS,
+      ...parsed,
+      readingLanguage: isReaderLanguage(parsed?.readingLanguage)
+        ? parsed.readingLanguage
+        : DEFAULT_SETTINGS.readingLanguage,
+    };
   } catch {
     return DEFAULT_SETTINGS;
   }
@@ -108,6 +121,10 @@ export default function Page() {
   const [wordTimestamps, setWordTimestamps] = useState<WordTimestamp[]>([]);
   const [currentPlaybackTime, setCurrentPlaybackTime] = useState(0);
   const [settings, setSettings] = useState<TextSettings>(DEFAULT_SETTINGS);
+  const settingsLoadedRef = React.useRef(false);
+  const handleReadingLanguageChange = React.useCallback((readingLanguage: ReaderLanguage) => {
+    setSettings((prev) => ({ ...prev, readingLanguage }));
+  }, []);
   const lastHighlightedWordRef = React.useRef<number>(-1);
   const [previousViewMode, setPreviousViewMode] = useState<ViewMode>("upload");
   const [showFullscreenPrompt, setShowFullscreenPrompt] = useState(false);
@@ -146,6 +163,7 @@ export default function Page() {
   useEffect(() => {
     const savedSettings = loadSettingsFromCookie();
     setSettings(savedSettings);
+    settingsLoadedRef.current = true;
   }, []);
 
   useEffect(() => {
@@ -193,8 +211,9 @@ export default function Page() {
     return () => unsubscribe();
   }, []);
 
-  // Save settings to cookie whenever they change
+  // Save settings to cookie whenever they change (after initial load)
   useEffect(() => {
+    if (!settingsLoadedRef.current) return;
     saveSettingsToCookie(settings);
   }, [settings]);
 
@@ -507,7 +526,8 @@ export default function Page() {
   }, [activeSavedDocumentId]);
 
   useEffect(() => {
-    if (!isAuthenticated || !firebaseUser || firebaseUser.isAnonymous || results.length === 0) {
+    const hasImage = results[0]?.image_base64;
+    if (!isAuthenticated || !firebaseUser || firebaseUser.isAnonymous || results.length === 0 || !hasImage) {
       return;
     }
 
@@ -835,6 +855,7 @@ export default function Page() {
     try {
       // Remove HTML tags before sending to TTS
       const plainText = displayText.replace(/<[^>]*>/g, "");
+      const ttsConfig = getTtsVoiceConfig(settings.readingLanguage);
       
       const ttsSignal = ttsAbortControllerRef.current?.signal;
       const response = await withAuthRetry(() =>
@@ -842,7 +863,11 @@ export default function Page() {
           signal: ttsSignal,
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text: plainText }),
+          body: JSON.stringify({
+            text: plainText,
+            language_code: ttsConfig.languageCode,
+            voice_name: ttsConfig.voiceName,
+          }),
         })
       );
 
@@ -1053,6 +1078,8 @@ export default function Page() {
           setViewMode("settings");
         }}
         onCancelLoading={handleCancelLoading}
+        readingLanguage={settings.readingLanguage}
+        onReadingLanguageChange={handleReadingLanguageChange}
         authSection={
           firebaseUser?.phoneNumber ? (
             <p className="text-sm text-blue-700 dark:text-blue-300 text-center font-semibold">
@@ -1080,6 +1107,7 @@ export default function Page() {
         onOpenFile={handleLoadSavedFile}
         onDeleteFile={handleDeleteSavedFile}
         onDeleteFiles={handleBatchDeleteSavedFiles}
+        onReadingLanguageChange={handleReadingLanguageChange}
       />
     );
   }
@@ -1154,6 +1182,7 @@ export default function Page() {
         onUseFullText={formatFullText}
         onCancelFormatting={handleCancelFormatting}
         onSavedWordsClick={handleOpenWordList}
+        onReadingLanguageChange={handleReadingLanguageChange}
       />
     );
   }
@@ -1224,6 +1253,7 @@ export default function Page() {
             setPreviousViewMode("text");
             setViewMode("edit");
           }}
+          onReadingLanguageChange={handleReadingLanguageChange}
         />
         <audio 
           ref={audioRef} 
@@ -1322,6 +1352,7 @@ export default function Page() {
         }}
         settings={settings}
         onSavedWordsClick={handleOpenWordList}
+        onReadingLanguageChange={handleReadingLanguageChange}
       />
     );
   }
@@ -1341,6 +1372,7 @@ export default function Page() {
         onDeleteWord={handleDeleteSavedWord}
         onUpdateWord={handleUpdateSavedWord}
         onStartSpellingTest={handleStartSpellingTest}
+        onReadingLanguageChange={handleReadingLanguageChange}
       />
     );
   }
@@ -1357,6 +1389,7 @@ export default function Page() {
           setViewMode("settings");
         }}
         onSavedWordsClick={handleOpenWordList}
+        onReadingLanguageChange={handleReadingLanguageChange}
       />
     );
   }

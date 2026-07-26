@@ -5,6 +5,7 @@ import { SpeakerLoudIcon, TrashIcon, Pencil1Icon, CheckIcon, Cross2Icon } from "
 import { Header } from "@/components";
 import type { SavedWord } from "@/utils/saved-words";
 import type { TextSettings } from "./SettingsView";
+import type { ReaderLanguage } from "@/utils/tts-language";
 
 interface WordListViewProps {
   words: SavedWord[];
@@ -15,6 +16,7 @@ interface WordListViewProps {
   onDeleteWord: (wordId: string) => void;
   onUpdateWord: (wordId: string, updates: { definition?: string; notes?: string }) => void;
   onStartSpellingTest: () => void;
+  onReadingLanguageChange?: (language: ReaderLanguage) => void;
 }
 
 export const WordListView: React.FC<WordListViewProps> = ({
@@ -26,6 +28,7 @@ export const WordListView: React.FC<WordListViewProps> = ({
   onDeleteWord,
   onUpdateWord,
   onStartSpellingTest,
+  onReadingLanguageChange,
 }) => {
   const [confirmDeleteId, setConfirmDeleteId] = React.useState<string | null>(null);
   const [editWordId, setEditWordId] = React.useState<string | null>(null);
@@ -66,7 +69,7 @@ export const WordListView: React.FC<WordListViewProps> = ({
 
   return (
     <div className="flex flex-col h-screen w-screen bg-white dark:bg-slate-950">
-      <Header onBackClick={onBackClick} onSettingsClick={onSettingsClick} fontFamily={settings.fontFamily} />
+      <Header onBackClick={onBackClick} onSettingsClick={onSettingsClick} fontFamily={settings.fontFamily} readingLanguage={settings.readingLanguage} onReadingLanguageChange={onReadingLanguageChange} />
 
       {confirmDeleteId && (
         <div

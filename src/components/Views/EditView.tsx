@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { CheckIcon } from "@radix-ui/react-icons";
 import { Header, Button, TextViewBox } from "@/components";
 import type { TextSettings } from "./SettingsView";
+import type { ReaderLanguage } from "@/utils/tts-language";
 
 interface EditViewProps {
   initialText: string;
@@ -12,6 +13,7 @@ interface EditViewProps {
   onSettingsClick: () => void;
   settings: TextSettings;
   onSavedWordsClick?: () => void;
+  onReadingLanguageChange?: (language: ReaderLanguage) => void;
 }
 
 export const EditView: React.FC<EditViewProps> = ({
@@ -21,6 +23,7 @@ export const EditView: React.FC<EditViewProps> = ({
   onSettingsClick,
   settings,
   onSavedWordsClick,
+  onReadingLanguageChange,
 }) => {
   const [htmlContent, setHtmlContent] = useState(initialText);
   const [selectedRange, setSelectedRange] = useState<{ start: number; end: number } | null>(null);
@@ -140,7 +143,7 @@ export const EditView: React.FC<EditViewProps> = ({
       style={{ backgroundColor: settings.backgroundColor }}
     >
       <div className="lg:border-b lg:border-blue-400 dark:lg:border-blue-700 sticky top-0 z-10">
-        <Header onBackClick={handleBackClick} onSettingsClick={onSettingsClick} onSavedWordsClick={onSavedWordsClick} showSavedWords borderColor="none" fontFamily={settings.fontFamily} />
+        <Header onBackClick={handleBackClick} onSettingsClick={onSettingsClick} onSavedWordsClick={onSavedWordsClick} showSavedWords borderColor="none" fontFamily={settings.fontFamily} readingLanguage={settings.readingLanguage} onReadingLanguageChange={onReadingLanguageChange} />
       </div>
 
       {/* Formatting toolbar - sticky at top on mobile and tablets */}

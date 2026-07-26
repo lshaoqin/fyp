@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Header, GradientReader } from "@/components";
+import type { ReaderLanguage } from "@/utils/tts-language";
 
 export interface TextSettings {
   fontFamily: string;
@@ -9,6 +10,7 @@ export interface TextSettings {
   fontColor: string;
   lineSpacing: number;
   backgroundColor: string;
+  readingLanguage: ReaderLanguage;
 }
 
 interface SettingsViewProps {
@@ -127,6 +129,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       fontColor: "#1a1a1a",
       lineSpacing: 1.5,
       backgroundColor: "#fffef5",
+      readingLanguage: "english",
     });
   };
 
@@ -135,7 +138,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       className="flex flex-col h-screen w-screen"
       style={{ backgroundColor: settings.backgroundColor }}
     >
-      <Header onBackClick={onBackClick} showSettings={false} fontFamily={settings.fontFamily} />
+      <Header onBackClick={onBackClick} showSettings={false} fontFamily={settings.fontFamily} readingLanguage={settings.readingLanguage} onReadingLanguageChange={(lang) => onSettingsChange({ ...settings, readingLanguage: lang })} />
 
       {/* Main content area with scrollable settings */}
       <div className="flex-1 overflow-auto p-6 sm:p-8 lg:p-12 pb-0">

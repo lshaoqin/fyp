@@ -56,7 +56,7 @@ def google_text_to_speech():
             audio_mime_type = 'audio/wav'
         else:
             try:
-                audio_content, timestamps, sample_rate, audio_mime_type = generate_elevenlabs_speech(text=text)
+                audio_content, timestamps, sample_rate, audio_mime_type = generate_elevenlabs_speech(text=text, language_code=language_code)
             except ElevenLabsTTSUnavailable as elevenlabs_error:
                 print(f"ElevenLabs unavailable, falling back to Google TTS: {str(elevenlabs_error)}")
                 provider = 'google'

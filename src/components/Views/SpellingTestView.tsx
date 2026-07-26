@@ -5,6 +5,7 @@ import { SpeakerLoudIcon, CheckCircledIcon, CrossCircledIcon } from "@radix-ui/r
 import { Header } from "@/components";
 import type { SavedWord } from "@/utils/saved-words";
 import type { TextSettings } from "./SettingsView";
+import type { ReaderLanguage } from "@/utils/tts-language";
 
 interface SpellingTestViewProps {
   allWords: SavedWord[];
@@ -12,6 +13,7 @@ interface SpellingTestViewProps {
   onBackClick: () => void;
   onSettingsClick: () => void;
   onSavedWordsClick?: () => void;
+  onReadingLanguageChange?: (language: ReaderLanguage) => void;
 }
 
 function shuffleAndPick(words: SavedWord[], count: number): SavedWord[] {
@@ -49,6 +51,7 @@ export const SpellingTestView: React.FC<SpellingTestViewProps> = ({
   onBackClick,
   onSettingsClick,
   onSavedWordsClick,
+  onReadingLanguageChange,
 }) => {
   const [testWords, setTestWords] = React.useState(() => shuffleAndPick(allWords, 10));
   const [currentIndex, setCurrentIndex] = React.useState(0);
@@ -117,7 +120,7 @@ export const SpellingTestView: React.FC<SpellingTestViewProps> = ({
 
   return (
     <div className="flex flex-col h-screen w-screen bg-white dark:bg-slate-950">
-      <Header onBackClick={handleExit} onSettingsClick={onSettingsClick} onSavedWordsClick={onSavedWordsClick} showSavedWords fontFamily={settings.fontFamily} />
+      <Header onBackClick={handleExit} onSettingsClick={onSettingsClick} onSavedWordsClick={onSavedWordsClick} showSavedWords fontFamily={settings.fontFamily} readingLanguage={settings.readingLanguage} onReadingLanguageChange={onReadingLanguageChange} />
 
       <div className="flex-1 overflow-auto p-6 sm:p-8">
         <div className="max-w-2xl mx-auto">

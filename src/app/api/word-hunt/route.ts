@@ -10,6 +10,8 @@ export async function POST(req: Request) {
 
     const body = await req.json();
     const text = typeof body?.text === "string" ? body.text.trim() : "";
+    const languageCode = typeof body?.language_code === "string" ? body.language_code.trim() : "";
+    const voiceName = typeof body?.voice_name === "string" ? body.voice_name.trim() : "";
 
     if (!text) {
       return NextResponse.json({ error: "No text provided" }, { status: 400 });
@@ -27,7 +29,11 @@ export async function POST(req: Request) {
     const response = await fetch(`${backendUrl}/word-hunt/vocabulary`, {
       method: "POST",
       headers,
-      body: JSON.stringify({ text }),
+      body: JSON.stringify({
+        text,
+        language_code: languageCode || undefined,
+        voice_name: voiceName || undefined,
+      }),
     });
 
     if (!response.ok) {
