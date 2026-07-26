@@ -46,3 +46,4 @@ backend/credentials/
 src/credentials/
 credentials.json
 google-credentials.json
+backend/key.json
