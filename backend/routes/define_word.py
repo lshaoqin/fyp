@@ -12,8 +12,9 @@ from utils.firebase_auth import optional_firebase_auth
 
 define_word_bp = Blueprint('define_word', __name__)
 
-# Initialize hyphenator for English
-hyphenator = Pyphen(lang='en_US')
+# Initialize hyphenators
+hyphenator_en = Pyphen(lang='en_US')
+hyphenator_ms = Pyphen(lang='ms_MY')
 
 
 def strip_punctuation(word: str) -> str:
@@ -28,21 +29,21 @@ def strip_punctuation(word: str) -> str:
     return word.strip(string.punctuation)
 
 
-def get_syllabification(word: str) -> list:
+def get_syllabification(word: str, language_code: str = "en-US") -> list:
     """Get syllabification of a word using pyphen.
     
     Args:
         word: The word to syllabify
+        language_code: BCP-47 language code
         
     Returns:
         List of syllables
     """
     try:
-        # pyphen uses hyphens for syllable breaks
+        hyphenator = hyphenator_ms if language_code.startswith("ms") else hyphenator_en
         hyphenated = hyphenator.inserted(word)
-        # Split by hyphen to get syllables
         syllables = hyphenated.split('-')
-        return [s for s in syllables if s]  # Remove empty strings
+        return [s for s in syllables if s]
     except Exception:
         return []
 
@@ -91,7 +92,7 @@ def define_word():
         language_code = str(data.get('language_code', '') or '').strip() or 'en-US'
         voice_name = str(data.get('voice_name', '') or '').strip() or 'en-US-Neural2-H'
 
-        gemini_data = get_word_learning_data(word=word, context_sentence=context_sentence)
+        gemini_data = get_word_learning_data(word=word, context_sentence=context_sentence, language_code=language_code)
 
         simple_definition = str(gemini_data.get('simple_definition', '')).strip()
         if not simple_definition:
@@ -101,7 +102,7 @@ def define_word():
         if not example_sentence:
             return jsonify({"error": "Could not generate an example sentence"}), 502
 
-        syllables = get_syllabification(word) or [word]
+        syllables = get_syllabification(word, language_code=language_code) or [word]
         illustration = fetch_word_illustration(word)
 
         full_word_audio = synthesize_reading_payload(

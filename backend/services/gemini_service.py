@@ -67,12 +67,13 @@ Please provide the corrected, formatted text only. Do not add any explanations, 
         return raw_text
 
 
-def get_word_learning_data(word: str, context_sentence: str = "") -> dict:
+def get_word_learning_data(word: str, context_sentence: str = "", language_code: str = "en") -> dict:
     """Generate a child-friendly definition and syllable breakdown for a word.
 
     Args:
         word: Target word.
         context_sentence: Optional sentence where the word appears.
+        language_code: BCP-47 language code (e.g. "en", "ms-MY").
 
     Returns:
         Dict with keys: simple_definition, example_sentence, syllables, part_of_speech.
@@ -80,7 +81,31 @@ def get_word_learning_data(word: str, context_sentence: str = "") -> dict:
     sentence_context = context_sentence.strip() if context_sentence else ""
     context_block = sentence_context if sentence_context else "(No sentence context provided)"
 
-    prompt = f"""You are a literacy tutor for primary school students.
+    is_malay = language_code and language_code.startswith("ms")
+
+    if is_malay:
+        prompt = f"""Anda seorang tutor literasi untuk murid sekolah rendah.
+
+Berdasarkan perkataan sasaran dan konteks ayat yang diberikan, berikan penerangan yang ringkas dan mudah difahami.
+
+Perkataan sasaran: {word}
+Konteks ayat: {context_block}
+
+Kembalikan JSON SAHAJA dengan format tepat berikut:
+{{
+  "word": "{word}",
+  "simple_definition": "Definisi ringkas yang mudah difahami oleh kanak-kanak dalam satu ayat.",
+  "example_sentence": "Ayat contoh pendek yang sesuai untuk murid sekolah rendah.",
+  "part_of_speech": "kata_nama|kata_kerja|kata_sifat|kata_keterangan|lain"
+}}
+
+Peraturan:
+- simple_definition maksimum 20 patah perkataan.
+- example_sentence maksimum 12 patah perkataan.
+- Jangan sertakan markah atau teks tambahan.
+"""
+    else:
+        prompt = f"""You are a literacy tutor for primary school students.
 
 Given this target word and optional sentence context, return a short, simple explanation.
 
@@ -117,8 +142,13 @@ Rules:
     return parsed
 
 
-def get_word_hunt_vocabulary_data(text: str, excluded_words: list[str] | None = None) -> dict:
+def get_word_hunt_vocabulary_data(text: str, excluded_words: list[str] | None = None, language_code: str = "en") -> dict:
     """Generate a vocabulary-style word hunt question from source text.
+
+    Args:
+        text: Source text to extract vocabulary from.
+        excluded_words: Words to exclude from selection.
+        language_code: BCP-47 language code (e.g. "en", "ms-MY").
 
     Returns:
         Dict with keys: question, correct_words, completion_feedback.
@@ -130,7 +160,37 @@ def get_word_hunt_vocabulary_data(text: str, excluded_words: list[str] | None = 
     filtered_excluded = [str(word).strip() for word in (excluded_words or []) if str(word).strip()]
     excluded_block = ", ".join(filtered_excluded) if filtered_excluded else "(none)"
 
-    prompt = f"""You are creating a child-friendly vocabulary word-hunt game.
+    is_malay = language_code and language_code.startswith("ms")
+
+    if is_malay:
+        prompt = f"""Anda sedang mencipta permainan cari perkataan (word hunt) untuk kanak-kanak.
+
+Berdasarkan teks sumber ini, pilih satu perkataan bermakna yang muncul tepat dalam teks sumber.
+Kemudian tulis satu petunjuk/definisi mudah dan maklum balas permainan.
+
+Teks sumber:
+{cleaned_text}
+
+Perkataan yang TIDAK BOLEH dipilih sebagai perkataan sasaran:
+{excluded_block}
+
+Kembalikan JSON SAHAJA dengan format tepat berikut:
+{{
+  "question": "Ketuk perkataan yang bermaksud ...",
+  "correct_words": ["perkataan-tepat-dari-teks-sumber"],
+  "completion_feedback": "Ayat maklum balas pendek yang menggalakkan."
+}}
+
+Peraturan:
+- Gunakan tepat satu perkataan sasaran dalam correct_words.
+- Perkataan sasaran mesti disalin tepat dari teks sumber.
+- Jangan pilih perkataan yang tersenarai dalam senarai perkataan larangan di atas.
+- Soalan maksimum 18 patah perkataan.
+- completion_feedback maksimum 14 patah perkataan.
+- Jangan sertakan markah atau kunci tambahan.
+"""
+    else:
+        prompt = f"""You are creating a child-friendly vocabulary word-hunt game.
 
 Given this source text, choose one meaningful vocabulary word that appears exactly in the source text.
 Then write a simple clue/definition and game feedback.

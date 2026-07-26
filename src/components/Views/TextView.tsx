@@ -531,8 +531,8 @@ export const TextView: React.FC<TextViewProps> = ({
   };
 
   const startWordHunt = useCallback(async (modeOverride?: WordHuntMode) => {
-    if (settings.readingLanguage !== "english") {
-      setWordHuntFeedback("Word hunt is only available in English.");
+    if (settings.readingLanguage !== "english" && settings.readingLanguage !== "malay") {
+      setWordHuntFeedback("Word hunt is only available in English and Malay.");
       return;
     }
 
@@ -696,7 +696,7 @@ export const TextView: React.FC<TextViewProps> = ({
 
   const handleWordTapForDefinition = useCallback((word: string, sentenceContext: string) => {
     if (handleWordTapForWordHunt(word)) return;
-    if (settings.readingLanguage !== "english") return;
+    if (settings.readingLanguage !== "english" && settings.readingLanguage !== "malay") return;
     setSelectedWord(word);
     setSelectedWordContext(sentenceContext);
     setIsPopoverOpen(true);
@@ -1322,7 +1322,7 @@ export const TextView: React.FC<TextViewProps> = ({
             </Button>
             <Button
               onClick={startWordHunt}
-              disabled={wordHuntLoading || isFormatting || settings.readingLanguage !== "english"}
+              disabled={wordHuntLoading || isFormatting || (settings.readingLanguage !== "english" && settings.readingLanguage !== "malay")}
               icon={<FileTextIcon className="w-6 h-6" />}
             >
               {wordHuntLoading ? "Preparing..." : "Word hunt"}

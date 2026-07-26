@@ -21,10 +21,12 @@ def get_vocabulary_word_hunt():
         text = str(data.get('text', '')).strip()
         language_code = str(data.get('language_code', '') or '').strip() or 'en-US'
         voice_name = str(data.get('voice_name', '') or '').strip() or 'en-US-Neural2-H'
+        excluded_words_raw = data.get('excluded_words')
+        excluded_words = [str(w).strip() for w in (excluded_words_raw or []) if str(w).strip()] or None
         if not text:
             return jsonify({"error": "Empty text"}), 400
 
-        word_hunt_data = get_word_hunt_vocabulary_data(text)
+        word_hunt_data = get_word_hunt_vocabulary_data(text, excluded_words=excluded_words, language_code=language_code)
 
         # Generate tappable audio for each correct vocabulary answer.
         word_audio = {}
